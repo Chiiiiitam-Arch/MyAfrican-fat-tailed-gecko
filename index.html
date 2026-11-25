@@ -109,6 +109,7 @@ label.field > span.hint{font-size:11px;font-weight:400;color:#938d9a}
 
 .food-item-row{background:var(--card-2);border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:8px}
 .food-item-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px;color:var(--gold);font-weight:700}
+.custom-food-input{margin-top:6px}
 
 .unconfirmed-box{background:var(--warn-bg);border:1px solid #69491b;border-radius:12px;padding:12px;margin-top:10px}
 .unconfirmed-box h4{margin:0 0 6px;font-size:13px;color:var(--warn)}
@@ -201,6 +202,7 @@ const FOOD_CANDIDATES = [
   '冷凍フタホシ', '活フタホシ', '冷凍イエコ', '活イエコ',
   '冷凍クロコ', 'デュビア', 'ジャイアントミルワーム'
 ];
+const FOOD_OTHER_VALUE = '__OTHER__';
 const HEALTH_CATEGORIES = ['脱皮', '便', '食欲・体調', 'その他'];
 
 const INITIAL_PETS = [
@@ -287,7 +289,6 @@ function normalizeAndMerge(raw) {
   if (!raw || !Array.isArray(raw.pets) || !Array.isArray(raw.records)) {
     return buildInitialData();
   }
-  // ペットの欠損フィールド補完（既存値は上書きしない）
   const pets = raw.pets.map((p, idx) => {
     const def = INITIAL_PETS.find(d => d.id === String(p.id)) || INITIAL_PETS[idx] || {};
     return {
@@ -304,7 +305,6 @@ function normalizeAndMerge(raw) {
     };
   });
 
-  // 既存記録に要確認フラグが抜けている初期シードがあれば補完（ユーザーが明示的に confirmedByUser:true にした場合は維持）
   const records = raw.records.map(r => {
     const copy = { ...r };
     if (copy.id === 'seed-9' && !copy.confirmedByUser && copy.unconfirmed === undefined) {
@@ -363,6 +363,19 @@ function sortRecordsDesc(list) {
   });
 }
 
+/** 餌の種類プルダウンの選択肢HTMLを生成 */
+function foodSelectOptionsHtml(foodVal, isCustom) {
+  const val = String(foodVal ?? '');
+  const useOther = Boolean(isCustom) || (val !== '' && !FOOD_CANDIDATES.includes(val));
+  const selectedKey = useOther ? FOOD_OTHER_VALUE : val;
+  let html = `<option value="" ${selectedKey === '' ? 'selected' : ''}>未選択・未判別</option>`;
+  for (const cand of FOOD_CANDIDATES) {
+    html += `<option value="${esc(cand)}" ${selectedKey === cand ? 'selected' : ''}>${esc(cand)}</option>`;
+  }
+  html += `<option value="${FOOD_OTHER_VALUE}" ${selectedKey === FOOD_OTHER_VALUE ? 'selected' : ''}>その他（自由入力）</option>`;
+  return { html, useOther };
+}
+
 // ============================================================================
 // 3. アプリ状態 & ストレージ管理
 // ============================================================================
@@ -383,7 +396,7 @@ const state = {
   recDateFilter: '',
   // 給餌入力ドラフト（タブ移動しても保持）
   feedDate: todayJST(),
-  feedDraft: {}, // { [petId]: { items: [{food,count,supp}], result, note } }
+  feedDraft: {}, // { [petId]: { items: [{food,count,supp,customFood}], result, note } }
   feedErrors: [],
   feedDupWarning: false,
   // JSON復元プレビュー
@@ -430,7 +443,6 @@ function persistData(nextData, successMsg) {
     showStatus('画面に一時反映しました（この環境ではブラウザ保存不可。閉じる前にJSON書き出しを行ってください）', 'warn');
   }
 
-  // クラウド自動同期（テストモード時は本番クラウドへ自動送信しない）
   if (!state.testMode && state.autoSync && state.cloudUser && fbClient.db) {
     pushToCloud(true);
   }
@@ -457,10 +469,10 @@ function saveDraft() {
 }
 function ensureDraftForPet(petId) {
   if (!state.feedDraft[petId]) {
-    state.feedDraft[petId] = { items: [{ food: '', count: '', supp: '' }], result: '', note: '' };
+    state.feedDraft[petId] = { items: [{ food: '', count: '', supp: '', customFood: false }], result: '', note: '' };
   }
   if (!Array.isArray(state.feedDraft[petId].items) || !state.feedDraft[petId].items.length) {
-    state.feedDraft[petId].items = [{ food: '', count: '', supp: '' }];
+    state.feedDraft[petId].items = [{ food: '', count: '', supp: '', customFood: false }];
   }
   return state.feedDraft[petId];
 }
@@ -502,7 +514,7 @@ function showStatus(msg, type = 'ok') {
 }
 
 // ============================================================================
-// 4. Firebase クラウド同期モジュール（任意設定・案B）
+// 4. Firebase クラウド同期モジュール（既存コレクション構造と完全互換）
 // ============================================================================
 const fbClient = {
   app: null, auth: null, db: null,
@@ -657,7 +669,7 @@ function petName(id) {
 /** 給餌レコードの餌アイテム配列を統一取得（後方互換対応） */
 function getFeedItems(r) {
   if (Array.isArray(r.items) && r.items.length > 0) {
-    return r.items;
+    return r.items.map(it => ({ food: it.food ?? '', count: it.count ?? '', supp: it.supp ?? '' }));
   }
   return [{ food: r.food ?? '', count: r.count ?? '', supp: r.supp ?? '' }];
 }
@@ -865,7 +877,6 @@ function renderPetDetail(app, petId) {
   const unconfirmedWeights = sortRecordsDesc(state.data.records.filter(r => r.kind === 'weight' && r.pet === p.id && r.unconfirmed));
   const petRecords = state.data.records.filter(r => [r.pet, r.partner, r.child].includes(p.id));
 
-  // 親子関係
   const children = state.data.pets.filter(c => c.mother === p.id || c.father === p.id);
   const motherPet = p.mother ? getPet(p.mother) : null;
   const fatherPet = p.father ? getPet(p.father) : null;
@@ -992,7 +1003,7 @@ function drawWeightChart(petId) {
   });
 }
 
-/** 7-3. 日付別の給餌入力（9匹固定順・複数餌対応・入力途中保持） */
+/** 7-3. 日付別の給餌入力（9匹固定順・プルダウン選択・複数餌対応・入力途中保持） */
 function renderBatchFeed(app) {
   const existingToday = state.data.records.filter(r => r.kind === 'feed' && r.date === state.feedDate);
   const existingPetIds = new Set(existingToday.map(r => r.pet));
@@ -1000,7 +1011,6 @@ function renderBatchFeed(app) {
   app.innerHTML = `
     <h2>日付別の給餌入力</h2>
     <p class="muted">記録する個体だけ入力してまとめて保存できます。入力途中の内容は別タブへ移っても保持されます。</p>
-    <datalist id="food-datalist">${FOOD_CANDIDATES.map(f => `<option value="${esc(f)}">`).join('')}</datalist>
 
     <section class="box">
       <div class="row spread">
@@ -1035,30 +1045,38 @@ function renderBatchFeed(app) {
             <div class="mini" style="margin-bottom:8px">${esc(feedInfo.mainText)}</div>
 
             <div class="food-items-container">
-              ${d.items.map((it, itemIdx) => `
-                <div class="food-item-row" data-item-idx="${itemIdx}">
-                  <div class="food-item-head">
-                    <span>餌 ${itemIdx + 1}</span>
-                    ${d.items.length > 1 ? `<button type="button" class="small danger-btn" data-remove-food-item="${esc(p.id)}:${itemIdx}" style="min-height:30px;padding:2px 8px;font-size:12px">削除</button>` : ''}
-                  </div>
-                  <label class="field" style="margin:4px 0">
-                    餌の種類
-                    <input type="text" list="food-datalist" data-draft-field="food" data-pet="${esc(p.id)}" data-idx="${itemIdx}" value="${esc(it.food)}" placeholder="選択または自由入力">
-                  </label>
-                  <div class="grid-2" style="gap:6px">
+              ${d.items.map((it, itemIdx) => {
+                const { html: foodOpts, useOther } = foodSelectOptionsHtml(it.food, it.customFood);
+                return `
+                  <div class="food-item-row" data-item-idx="${itemIdx}">
+                    <div class="food-item-head">
+                      <span>餌 ${itemIdx + 1}</span>
+                      ${d.items.length > 1 ? `<button type="button" class="small danger-btn" data-remove-food-item="${esc(p.id)}:${itemIdx}" style="min-height:30px;padding:2px 8px;font-size:12px">削除</button>` : ''}
+                    </div>
                     <label class="field" style="margin:4px 0">
-                      給餌数（空欄可）
-                      <input type="number" min="0" step="1" inputmode="numeric" data-draft-field="count" data-pet="${esc(p.id)}" data-idx="${itemIdx}" value="${esc(it.count)}" placeholder="空欄＝未入力">
-                    </label>
-                    <label class="field" style="margin:4px 0">
-                      添加
-                      <select data-draft-field="supp" data-pet="${esc(p.id)}" data-idx="${itemIdx}">
-                        ${optionsHtml(SUPPLEMENTS, it.supp, '未判別')}
+                      餌の種類
+                      <select data-draft-field="foodSelect" data-pet="${esc(p.id)}" data-idx="${itemIdx}">
+                        ${foodOpts}
                       </select>
+                      ${useOther ? `
+                        <input type="text" class="custom-food-input" data-draft-field="foodCustom" data-pet="${esc(p.id)}" data-idx="${itemIdx}" value="${esc(it.food)}" placeholder="餌の種類を自由入力">
+                      ` : ''}
                     </label>
+                    <div class="grid-2" style="gap:6px">
+                      <label class="field" style="margin:4px 0">
+                        給餌数（空欄可）
+                        <input type="number" min="0" step="1" inputmode="numeric" data-draft-field="count" data-pet="${esc(p.id)}" data-idx="${itemIdx}" value="${esc(it.count)}" placeholder="空欄＝未入力">
+                      </label>
+                      <label class="field" style="margin:4px 0">
+                        添加
+                        <select data-draft-field="supp" data-pet="${esc(p.id)}" data-idx="${itemIdx}">
+                          ${optionsHtml(SUPPLEMENTS, it.supp, '未判別')}
+                        </select>
+                      </label>
+                    </div>
                   </div>
-                </div>
-              `).join('')}
+                `;
+              }).join('')}
             </div>
 
             <button type="button" class="small secondary" data-add-food-item="${esc(p.id)}" style="width:100%;margin-bottom:8px">＋ 餌の種類を追加（2種類以上）</button>
@@ -1145,7 +1163,6 @@ function handleBatchSave(allowAdditional) {
 
     if (!validItems.length && !res && !note) continue;
 
-    // 数値バリデーション（空欄はOK、入力時は0以上の整数のみ）
     for (const it of validItems) {
       if (it.count !== '' && !/^\d+$/.test(it.count)) {
         state.feedErrors.push(`${p.name}: 給餌数は0以上の整数か空欄にしてください（入力値: ${it.count}）`);
@@ -1180,7 +1197,6 @@ function handleBatchSave(allowAdditional) {
     return;
   }
 
-  // 同日重複チェック
   const hasDup = toSave.some(r =>
     state.data.records.some(ex => ex.kind === 'feed' && ex.pet === r.pet && ex.date === r.date)
   );
@@ -1196,7 +1212,6 @@ function handleBatchSave(allowAdditional) {
   state.feedDupWarning = false;
   saveDraft();
 
-  // 保存直後に日付別一覧で確認できるよう遷移
   state.tab = '日付別記録';
   state.recDateFilter = state.feedDate;
   state.recKindFilter = 'feed';
@@ -1385,7 +1400,6 @@ function renderBackupSync(app) {
     </section>
   `;
 
-  // イベント登録
   document.getElementById('btn-export-json').addEventListener('click', () => {
     const blob = new Blob([JSON.stringify(state.data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
@@ -1543,49 +1557,89 @@ function openProfileModal(petId) {
 
 function openRecordModal(record, isNew = false) {
   const k = record.kind;
-  let modalFeedItems = k === 'feed' ? structuredClone(getFeedItems(record)) : [];
+  let modalFeedItems = k === 'feed'
+    ? getFeedItems(record).map(it => ({
+        ...it,
+        customFood: Boolean(it.food && !FOOD_CANDIDATES.includes(it.food))
+      }))
+    : [];
+
+  // モーダル内で日付・個体・結果・メモを再描画時に保持するための一時状態
+  const modalState = {
+    date: record.date || todayJST(),
+    pet: record.pet ?? '',
+    result: record.result ?? '',
+    note: record.note ?? '',
+    value: record.value ?? '',
+    category: record.category || '脱皮',
+    partner: record.partner ?? '',
+    child: record.child ?? '',
+    unconfirmed: Boolean(record.unconfirmed)
+  };
+
+  function captureFormInputs() {
+    const form = document.getElementById('rec-form');
+    if (!form) return;
+    const fd = new FormData(form);
+    if (fd.has('date')) modalState.date = String(fd.get('date') || '');
+    if (fd.has('pet')) modalState.pet = String(fd.get('pet') || '');
+    if (fd.has('result')) modalState.result = String(fd.get('result') || '');
+    if (fd.has('note')) modalState.note = String(fd.get('note') || '');
+    if (fd.has('value')) modalState.value = String(fd.get('value') || '');
+    if (fd.has('category')) modalState.category = String(fd.get('category') || '');
+    if (fd.has('partner')) modalState.partner = String(fd.get('partner') || '');
+    if (fd.has('child')) modalState.child = String(fd.get('child') || '');
+    const uncEl = form.querySelector('[name="unconfirmed"]');
+    if (uncEl) modalState.unconfirmed = uncEl.checked;
+  }
 
   function buildBody() {
     let specific = '';
     if (k === 'feed') {
       specific = `
-        <datalist id="modal-food-list">${FOOD_CANDIDATES.map(f => `<option value="${esc(f)}">`).join('')}</datalist>
         <div id="modal-feed-items">
-          ${modalFeedItems.map((it, idx) => `
-            <div class="food-item-row">
-              <div class="food-item-head">
-                <span>餌 ${idx + 1}</span>
-                ${modalFeedItems.length > 1 ? `<button type="button" class="small danger-btn" data-m-rem="${idx}" style="min-height:28px;padding:2px 8px;font-size:12px">削除</button>` : ''}
+          ${modalFeedItems.map((it, idx) => {
+            const { html: foodOpts, useOther } = foodSelectOptionsHtml(it.food, it.customFood);
+            return `
+              <div class="food-item-row">
+                <div class="food-item-head">
+                  <span>餌 ${idx + 1}</span>
+                  ${modalFeedItems.length > 1 ? `<button type="button" class="small danger-btn" data-m-rem="${idx}" style="min-height:28px;padding:2px 8px;font-size:12px">削除</button>` : ''}
+                </div>
+                <label class="field" style="margin:4px 0">
+                  餌の種類
+                  <select data-m-field="foodSelect" data-m-idx="${idx}">${foodOpts}</select>
+                  ${useOther ? `<input type="text" class="custom-food-input" data-m-field="foodCustom" data-m-idx="${idx}" value="${esc(it.food)}" placeholder="餌の種類を自由入力">` : ''}
+                </label>
+                <div class="grid-2" style="gap:6px">
+                  <label class="field" style="margin:4px 0">給餌数（空欄可）<input type="number" min="0" step="1" inputmode="numeric" data-m-field="count" data-m-idx="${idx}" value="${esc(it.count)}"></label>
+                  <label class="field" style="margin:4px 0">添加<select data-m-field="supp" data-m-idx="${idx}">${optionsHtml(SUPPLEMENTS, it.supp, '未判別')}</select></label>
+                </div>
               </div>
-              <label class="field" style="margin:4px 0">餌の種類<input type="text" list="modal-food-list" data-m-field="food" data-m-idx="${idx}" value="${esc(it.food)}"></label>
-              <div class="grid-2" style="gap:6px">
-                <label class="field" style="margin:4px 0">給餌数（空欄可）<input type="number" min="0" step="1" data-m-field="count" data-m-idx="${idx}" value="${esc(it.count)}"></label>
-                <label class="field" style="margin:4px 0">添加<select data-m-field="supp" data-m-idx="${idx}">${optionsHtml(SUPPLEMENTS, it.supp, '未判別')}</select></label>
-              </div>
-            </div>
-          `).join('')}
+            `;
+          }).join('')}
         </div>
         <button type="button" class="small secondary" id="modal-add-food" style="width:100%;margin-bottom:8px">＋ 餌の種類を追加</button>
-        <label class="field">摂餌結果<select name="result">${optionsHtml(['食べた', '食べなかった'], record.result, '未判別')}</select></label>
+        <label class="field">摂餌結果<select name="result">${optionsHtml(['食べた', '食べなかった'], modalState.result, '未判別')}</select></label>
       `;
     } else if (k === 'weight') {
       specific = `
-        <label class="field">体重（g）<input name="value" type="number" min="0.01" step="0.01" value="${esc(record.value)}" required></label>
+        <label class="field">体重（g）<input name="value" type="number" min="0.01" step="0.01" value="${esc(modalState.value)}" required></label>
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:8px 0;cursor:pointer">
-          <input type="checkbox" name="unconfirmed" ${record.unconfirmed ? 'checked' : ''} style="width:auto;min-height:auto">
+          <input type="checkbox" name="unconfirmed" ${modalState.unconfirmed ? 'checked' : ''} style="width:auto;min-height:auto">
           要確認データとして扱う（確定グラフから除外）
         </label>
       `;
     } else if (k === 'health') {
-      specific = `<label class="field">種類<select name="category">${optionsHtml(HEALTH_CATEGORIES, record.category || '脱皮')}</select></label>`;
+      specific = `<label class="field">種類<select name="category">${optionsHtml(HEALTH_CATEGORIES, modalState.category)}</select></label>`;
     } else if (k === 'breed') {
       specific = `
         <div class="grid-2">
-          <label class="field">父<select name="partner">${petOptionsHtml(record.partner, '未判別')}</select></label>
-          <label class="field">子<select name="child">${petOptionsHtml(record.child, '未登録・未判別')}</select></label>
+          <label class="field">父<select name="partner">${petOptionsHtml(modalState.partner, '未判別')}</select></label>
+          <label class="field">子<select name="child">${petOptionsHtml(modalState.child, '未登録・未判別')}</select></label>
         </div>
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:8px 0;cursor:pointer">
-          <input type="checkbox" name="unconfirmed" ${record.unconfirmed ? 'checked' : ''} style="width:auto;min-height:auto">
+          <input type="checkbox" name="unconfirmed" ${modalState.unconfirmed ? 'checked' : ''} style="width:auto;min-height:auto">
           要確認フラグを付ける
         </label>
       `;
@@ -1594,11 +1648,11 @@ function openRecordModal(record, isNew = false) {
     return `
       <form id="rec-form">
         <div class="grid-2">
-          <label class="field">日付<input name="date" type="date" value="${esc(record.date || todayJST())}" required></label>
-          <label class="field">${k === 'breed' ? '母' : '個体'}<select name="pet">${petOptionsHtml(record.pet, k === 'breed' ? '未判別' : undefined)}</select></label>
+          <label class="field">日付<input name="date" type="date" value="${esc(modalState.date)}" required></label>
+          <label class="field">${k === 'breed' ? '母' : '個体'}<select name="pet">${petOptionsHtml(modalState.pet, k === 'breed' ? '未判別' : undefined)}</select></label>
         </div>
         ${specific}
-        <label class="field">メモ<textarea name="note">${esc(record.note || '')}</textarea></label>
+        <label class="field">メモ<textarea name="note">${esc(modalState.note)}</textarea></label>
       </form>
     `;
   }
@@ -1612,21 +1666,49 @@ function openRecordModal(record, isNew = false) {
 
     const bodyEl = document.getElementById('modal-body');
     if (k === 'feed') {
-      bodyEl.addEventListener('input', e => {
-        const idx = e.target.dataset.mIdx;
-        const field = e.target.dataset.mField;
-        if (idx !== undefined && field) modalFeedItems[Number(idx)][field] = e.target.value;
-      });
-      bodyEl.addEventListener('change', e => {
-        const idx = e.target.dataset.mIdx;
-        const field = e.target.dataset.mField;
-        if (idx !== undefined && field) modalFeedItems[Number(idx)][field] = e.target.value;
-      });
+      bodyEl.oninput = (e) => {
+        const idx = e.target.dataset?.mIdx;
+        const field = e.target.dataset?.mField;
+        if (idx === undefined || !field) return;
+        const item = modalFeedItems[Number(idx)];
+        if (field === 'foodCustom') item.food = e.target.value;
+        else if (field === 'count') item.count = e.target.value;
+      };
+      bodyEl.onchange = (e) => {
+        const idx = e.target.dataset?.mIdx;
+        const field = e.target.dataset?.mField;
+        if (idx === undefined || !field) return;
+        const item = modalFeedItems[Number(idx)];
+        if (field === 'foodSelect') {
+          captureFormInputs();
+          if (e.target.value === FOOD_OTHER_VALUE) {
+            item.customFood = true;
+            if (FOOD_CANDIDATES.includes(item.food)) item.food = '';
+          } else {
+            item.customFood = false;
+            item.food = e.target.value;
+          }
+          mountModal();
+        } else if (field === 'supp') {
+          item.supp = e.target.value;
+        }
+      };
       const addBtn = document.getElementById('modal-add-food');
-      if (addBtn) addBtn.onclick = () => { modalFeedItems.push({ food: '', count: '', supp: '' }); mountModal(); };
+      if (addBtn) addBtn.onclick = () => {
+        captureFormInputs();
+        modalFeedItems.push({ food: '', count: '', supp: '', customFood: false });
+        mountModal();
+      };
       bodyEl.querySelectorAll('[data-m-rem]').forEach(b => {
-        b.onclick = () => { modalFeedItems.splice(Number(b.dataset.mRem), 1); mountModal(); };
+        b.onclick = () => {
+          captureFormInputs();
+          modalFeedItems.splice(Number(b.dataset.mRem), 1);
+          mountModal();
+        };
       });
+    } else {
+      bodyEl.oninput = null;
+      bodyEl.onchange = null;
     }
 
     const delBtn = document.getElementById('del-rec-btn');
@@ -1642,11 +1724,10 @@ function openRecordModal(record, isNew = false) {
     }
 
     document.getElementById('save-rec-btn').onclick = () => {
-      const form = document.getElementById('rec-form');
-      const fd = new FormData(form);
-      const date = String(fd.get('date') || '').trim();
-      const pet = String(fd.get('pet') || '');
-      const note = String(fd.get('note') || '').trim();
+      captureFormInputs();
+      const date = modalState.date.trim();
+      const pet = modalState.pet;
+      const note = modalState.note.trim();
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { showStatus('日付を正しく入力してください。', 'danger'); return; }
 
       const updated = { ...record, id: record.id || uid(), kind: k, date, pet, note };
@@ -1667,27 +1748,25 @@ function openRecordModal(record, isNew = false) {
         updated.supp = cleaned[0]?.supp || '';
         if (cleaned.length > 1) updated.items = cleaned;
         else delete updated.items;
-        updated.result = String(fd.get('result') || '');
+        updated.result = modalState.result;
       } else if (k === 'weight') {
-        const val = String(fd.get('value') || '').trim();
+        const val = modalState.value.trim();
         if (!val || Number(val) <= 0) { showStatus('体重は0より大きい数値で入力してください。', 'danger'); return; }
         updated.value = val;
-        const unc = form.querySelector('[name="unconfirmed"]')?.checked;
-        updated.unconfirmed = !!unc;
-        if (!unc) updated.confirmedByUser = true;
+        updated.unconfirmed = modalState.unconfirmed;
+        if (!updated.unconfirmed) updated.confirmedByUser = true;
       } else if (k === 'health') {
-        updated.category = String(fd.get('category') || 'その他');
+        updated.category = modalState.category || 'その他';
       } else if (k === 'breed') {
-        updated.partner = String(fd.get('partner') || '');
-        updated.child = String(fd.get('child') || '');
+        updated.partner = modalState.partner;
+        updated.child = modalState.child;
         const ids = [updated.pet, updated.partner, updated.child].filter(Boolean);
         if (new Set(ids).size !== ids.length) {
           showStatus('母・父・子には別々の個体を指定してください。', 'danger');
           return;
         }
-        const unc = form.querySelector('[name="unconfirmed"]')?.checked;
-        updated.unconfirmed = !!unc;
-        if (!unc) updated.confirmedByUser = true;
+        updated.unconfirmed = modalState.unconfirmed;
+        if (!updated.unconfirmed) updated.confirmedByUser = true;
       }
 
       const nextRecords = isNew
@@ -1772,7 +1851,7 @@ document.addEventListener('click', (e) => {
   const addFood = e.target.closest('[data-add-food-item]');
   if (addFood) {
     const d = ensureDraftForPet(addFood.dataset.addFoodItem);
-    d.items.push({ food: '', count: '', supp: '' });
+    d.items.push({ food: '', count: '', supp: '', customFood: false });
     saveDraft();
     render();
     return;
@@ -1796,28 +1875,46 @@ document.addEventListener('input', (e) => {
   if (!field) return;
   const pid = e.target.dataset.pet;
   const d = ensureDraftForPet(pid);
-  if (field === 'result' || field === 'note') {
-    d[field] = e.target.value;
-  } else {
+  if (field === 'note') {
+    d.note = e.target.value;
+  } else if (field === 'foodCustom') {
     const idx = Number(e.target.dataset.idx || 0);
-    if (!d.items[idx]) d.items[idx] = { food: '', count: '', supp: '' };
-    d.items[idx][field] = e.target.value;
+    if (!d.items[idx]) d.items[idx] = { food: '', count: '', supp: '', customFood: true };
+    d.items[idx].food = e.target.value;
+  } else if (field === 'count') {
+    const idx = Number(e.target.dataset.idx || 0);
+    if (!d.items[idx]) d.items[idx] = { food: '', count: '', supp: '', customFood: false };
+    d.items[idx].count = e.target.value;
   }
   saveDraft();
 });
+
 document.addEventListener('change', (e) => {
   const field = e.target.dataset?.draftField;
   if (!field) return;
   const pid = e.target.dataset.pet;
   const d = ensureDraftForPet(pid);
-  if (field === 'result' || field === 'note') {
-    d[field] = e.target.value;
-  } else {
+  if (field === 'result') {
+    d.result = e.target.value;
+    saveDraft();
+  } else if (field === 'foodSelect') {
     const idx = Number(e.target.dataset.idx || 0);
-    if (!d.items[idx]) d.items[idx] = { food: '', count: '', supp: '' };
-    d.items[idx][field] = e.target.value;
+    if (!d.items[idx]) d.items[idx] = { food: '', count: '', supp: '', customFood: false };
+    if (e.target.value === FOOD_OTHER_VALUE) {
+      d.items[idx].customFood = true;
+      if (FOOD_CANDIDATES.includes(d.items[idx].food)) d.items[idx].food = '';
+    } else {
+      d.items[idx].customFood = false;
+      d.items[idx].food = e.target.value;
+    }
+    saveDraft();
+    render();
+  } else if (field === 'supp') {
+    const idx = Number(e.target.dataset.idx || 0);
+    if (!d.items[idx]) d.items[idx] = { food: '', count: '', supp: '', customFood: false };
+    d.items[idx].supp = e.target.value;
+    saveDraft();
   }
-  saveDraft();
 });
 
 // ============================================================================
