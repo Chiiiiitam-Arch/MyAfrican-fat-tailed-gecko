@@ -1,0 +1,1835 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ニシアフ飼育ノート</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#0a0a0c;
+  --card:#161619;
+  --card-2:#1c1c21;
+  --input:#202024;
+  --border:#333136;
+  --border-strong:#48464b;
+  --text:#f3f1ed;
+  --muted:#b5b0ba;
+  --gold:#e8bc77;
+  --gold-dim:#30271d;
+  --gold-text:#19130c;
+  --ok:#6ed49b;
+  --ok-bg:#142b1f;
+  --warn:#f5b963;
+  --warn-bg:#332411;
+  --danger:#ff8f89;
+  --danger-bg:#36191a;
+  --info:#8cc8ff;
+  --info-bg:#162536;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;min-height:100dvh;overflow-x:hidden}
+header{background:#111114;border-bottom:1px solid var(--border);padding:16px 16px 14px;position:sticky;top:0;z-index:30}
+.header-inner{max-width:960px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+header small{display:block;color:var(--gold);letter-spacing:.16em;font-size:10px;font-weight:700}
+h1{font-size:clamp(20px,4.8vw,28px);margin:2px 0 0;line-height:1.2}
+h2{font-size:19px;margin:0 0 12px;line-height:1.3}
+h3{font-size:15px;margin:0 0 8px;line-height:1.35}
+p{margin:0 0 10px}
+.save-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid var(--border);background:var(--card-2);white-space:nowrap}
+.save-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.save-badge.ok{background:var(--ok-bg);border-color:#26573d;color:var(--ok)}
+.save-badge.ok .dot{background:var(--ok)}
+.save-badge.cloud{background:var(--info-bg);border-color:#274a6e;color:var(--info)}
+.save-badge.cloud .dot{background:var(--info)}
+.save-badge.warn{background:var(--warn-bg);border-color:#69491b;color:var(--warn)}
+.save-badge.warn .dot{background:var(--warn)}
+.save-badge.test{background:#2d1a38;border-color:#673882;color:#dfb5ff}
+.save-badge.test .dot{background:#dfb5ff}
+
+.test-banner{background:#2d1a38;color:#f0d9ff;border-bottom:1px solid #673882;padding:8px 16px;font-size:13px;font-weight:600;text-align:center}
+.test-banner.hidden{display:none}
+
+nav{max-width:960px;margin:0 auto;padding:10px 12px 6px;display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{flex:0 0 auto;min-height:44px;padding:8px 14px;border-radius:12px;font-size:14px}
+
+main{max-width:960px;margin:0 auto;padding:10px 12px 84px}
+#status-bar{max-width:960px;margin:4px auto 0;padding:0 12px}
+.status-msg{padding:10px 14px;border-radius:12px;font-size:13px;margin-bottom:6px;border:1px solid var(--border);background:var(--card-2);display:none}
+.status-msg.show{display:block}
+.status-msg.ok{background:var(--ok-bg);border-color:#26573d;color:var(--ok)}
+.status-msg.warn{background:var(--warn-bg);border-color:#69491b;color:var(--warn)}
+.status-msg.danger{background:var(--danger-bg);border-color:#6b2c2e;color:var(--danger)}
+
+button,input,select,textarea{
+  font:inherit;
+  border:1px solid var(--border-strong);
+  border-radius:12px;
+  padding:10px 12px;
+  background:var(--input);
+  color:var(--text);
+  min-height:44px;
+  max-width:100%;
+}
+input,select,textarea{width:100%}
+textarea{min-height:76px;resize:vertical}
+button{cursor:pointer;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:border-color .15s,background .15s,transform .08s}
+button:active{transform:scale(.98)}
+button:hover{border-color:var(--gold)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+button.active,button.primary{background:var(--gold);color:var(--gold-text);border-color:var(--gold)}
+button.secondary{background:var(--card-2);color:var(--text);border-color:var(--border-strong)}
+button.danger-btn{background:var(--danger-bg);color:var(--danger);border-color:#6b2c2e}
+button.small{min-height:38px;padding:6px 11px;font-size:13px;border-radius:10px}
+input::placeholder,textarea::placeholder{color:#8e8994}
+
+.card,section.box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:10px}
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.spread{justify-content:space-between}
+.nowrap{flex-wrap:nowrap}
+label.field{display:grid;gap:4px;margin:8px 0;font-size:13px;color:var(--muted);font-weight:600}
+label.field > span.hint{font-size:11px;font-weight:400;color:#938d9a}
+
+.tag{display:inline-flex;align-items:center;gap:4px;background:var(--gold-dim);color:#f3cf94;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700}
+.tag.muted-tag{background:#26262c;color:var(--muted)}
+.tag.warn-tag{background:var(--warn-bg);color:var(--warn);border:1px solid #69491b}
+.tag.ok-tag{background:var(--ok-bg);color:var(--ok)}
+.tag.danger-tag{background:var(--danger-bg);color:var(--danger)}
+.muted{color:var(--muted);font-size:13px}
+.mini{font-size:12px;color:var(--muted)}
+
+.pet-card{width:100%;text-align:left;display:block;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;color:var(--text);font-weight:400}
+.pet-card:hover{border-color:var(--gold)}
+.pet-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.pet-name{font-size:19px;font-weight:800;display:flex;align-items:center;gap:6px}
+.pet-order{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:8px;background:var(--gold-dim);color:var(--gold);font-size:12px;font-weight:800}
+
+.food-item-row{background:var(--card-2);border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:8px}
+.food-item-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px;color:var(--gold);font-weight:700}
+
+.unconfirmed-box{background:var(--warn-bg);border:1px solid #69491b;border-radius:12px;padding:12px;margin-top:10px}
+.unconfirmed-box h4{margin:0 0 6px;font-size:13px;color:var(--warn)}
+
+.chart-wrap{width:100%;overflow:hidden}
+canvas.weight-canvas{width:100%;height:210px;display:block}
+details summary{cursor:pointer;padding:8px 4px;font-size:13px;color:var(--gold);font-weight:700}
+
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:60;display:none;align-items:flex-end;justify-content:center;padding:0}
+.modal-backdrop.open{display:flex}
+@media(min-width:600px){.modal-backdrop{align-items:center;padding:16px}}
+.modal-box{background:var(--card);border:1px solid var(--border-strong);border-radius:20px 20px 0 0;width:100%;max-width:580px;max-height:92dvh;display:flex;flex-direction:column;overflow:hidden}
+@media(min-width:600px){.modal-box{border-radius:20px}}
+.modal-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;background:#111114}
+.modal-body{padding:16px;overflow-y:auto;flex:1}
+.modal-foot{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;background:#111114}
+
+.divider{height:1px;background:var(--border);margin:14px 0}
+.date-heading{font-size:13px;font-weight:800;color:var(--gold);margin:14px 0 6px;padding-left:4px;display:flex;align-items:center;justify-content:space-between}
+.error-list{background:var(--danger-bg);border:1px solid #6b2c2e;color:var(--danger);border-radius:12px;padding:12px;margin:10px 0;font-size:13px}
+.error-list ul{margin:4px 0 0;padding-left:18px}
+.preview-box{background:var(--card-2);border:1px solid var(--gold);border-radius:14px;padding:14px;margin-top:12px}
+.sticky-save-bar{position:sticky;bottom:10px;z-index:20;background:rgba(16,16,20,.95);backdrop-filter:blur(8px);border:1px solid var(--gold);border-radius:16px;padding:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-top:12px}
+</style>
+</head>
+<body>
+
+<div id="test-banner" class="test-banner hidden">
+  テストモード稼働中（独立した保存領域を使用中・本番データには影響しません）
+</div>
+
+<header>
+  <div class="header-inner">
+    <div>
+      <small>AFRICAN FAT-TAILED GECKOS</small>
+      <h1>ニシアフ飼育ノート</h1>
+    </div>
+    <div id="save-badge" class="save-badge" role="status" aria-live="polite">
+      <span class="dot"></span><span id="save-badge-text">読み込み中...</span>
+    </div>
+  </div>
+</header>
+
+<nav id="nav" aria-label="メインメニュー"></nav>
+<div id="status-bar"><div id="status-msg" class="status-msg" role="status" aria-live="polite"></div></div>
+<main id="app"></main>
+
+<!-- 汎用モーダル -->
+<div id="modal-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2 id="modal-title" style="margin:0;font-size:17px">編集</h2>
+      <button type="button" class="small secondary" id="modal-close">閉じる</button>
+    </div>
+    <div id="modal-body" class="modal-body"></div>
+    <div id="modal-foot" class="modal-foot"></div>
+  </div>
+</div>
+
+<!-- 確認ダイアログ（confirm代替） -->
+<div id="confirm-backdrop" class="modal-backdrop" role="alertdialog" aria-modal="true">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-head">
+      <h2 id="confirm-title" style="margin:0;font-size:16px">確認</h2>
+    </div>
+    <div id="confirm-body" class="modal-body" style="font-size:14px"></div>
+    <div class="modal-foot">
+      <button type="button" class="secondary" id="confirm-cancel">キャンセル</button>
+      <button type="button" class="primary" id="confirm-ok">実行する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+// ============================================================================
+// 1. 定数・初期データ（9匹・27件を完全保全）
+// ============================================================================
+const STORAGE_KEY_PROD = 'nishiaf-care-journal-v1';
+const STORAGE_KEY_TEST = 'nishiaf-care-journal-test';
+const FB_CONFIG_KEY = 'nishiaf-firebase-config-v1';
+const DRAFT_KEY = 'nishiaf-feed-draft-v1';
+const RECOVERY_ID = 'feeding-2026-11-15';
+
+const KINDS = { feed: '給餌', weight: '体重', health: '健康', breed: '繁殖' };
+const SUPPLEMENTS = ['① 何もなし', '② カルシウム', '③ カルシウム＋D3', '④ RVM'];
+const FOOD_CANDIDATES = [
+  '冷凍フタホシ', '活フタホシ', '冷凍イエコ', '活イエコ',
+  '冷凍クロコ', 'デュビア', 'ジャイアントミルワーム'
+];
+const HEALTH_CATEGORIES = ['脱皮', '便', '食欲・体調', 'その他'];
+
+const INITIAL_PETS = [
+  { id: '0', name: 'おる', sex: '♀', morph: 'WO Zero het Ghost Oreo', acquired: '2026-01-11', hatched: '', source: 'RAF', mother: '', father: '', note: '' },
+  { id: '1', name: 'める', sex: '♀', morph: 'WO het Ghost Amel Patternless', acquired: '2026-01-11', hatched: '', source: 'RAF', mother: '', father: '', note: '' },
+  { id: '2', name: 'ろき', sex: '♂', morph: 'Zero 66% het Caramel（CK LINE）', acquired: '2026-02-07', hatched: '', source: 'DREXX', mother: '', father: '', note: '' },
+  { id: '3', name: 'そる', sex: '♂', morph: 'Snow Zulu het Amel', acquired: '2026-02-07', hatched: '', source: 'Noir', mother: '', father: '', note: '' },
+  { id: '4', name: 'ぷな', sex: '♀', morph: 'Caramel het Amel', acquired: '2026-02-07', hatched: '', source: 'Noir', mother: '', father: '', note: '' },
+  { id: '5', name: 'ぱる', sex: '♂', morph: 'Ghost Oreo', acquired: '2026-03-01', hatched: '', source: 'RAF', mother: '', father: '', note: '' },
+  { id: '6', name: 'もる', sex: '♀', morph: 'Super Zero Ghost', acquired: '2026-05-24', hatched: '', source: 'RAF', mother: '', father: '', note: '' },
+  { id: '7', name: 'あま', sex: '♂', morph: 'Purple Haze', acquired: '2026-05-24', hatched: '', source: 'ファットテール', mother: '', father: '', note: '' },
+  {
+    id: '8', name: 'ちび', sex: '未判別', morph: '', acquired: '', hatched: '2026-06-06〜2026-06-07',
+    source: '', mother: '1', father: '2',
+    note: '2026/06/06〜07に孵化。過去体重 3.6 g、6.1 g（測定日未確認）。'
+  }
+];
+
+const INITIAL_WEIGHTS = [
+  { id: 'seed-1', kind: 'weight', date: '2026-08-02', pet: '0', value: '60.9', note: '' },
+  { id: 'seed-2', kind: 'weight', date: '2026-08-02', pet: '1', value: '64.4', note: '' },
+  { id: 'seed-3', kind: 'weight', date: '2026-08-02', pet: '2', value: '63.7', note: '' },
+  { id: 'seed-4', kind: 'weight', date: '2026-08-02', pet: '3', value: '47.9', note: '' },
+  { id: 'seed-5', kind: 'weight', date: '2026-08-02', pet: '4', value: '41.5', note: '' },
+  { id: 'seed-6', kind: 'weight', date: '2026-08-02', pet: '5', value: '51.5', note: '' },
+  { id: 'seed-7', kind: 'weight', date: '2026-08-02', pet: '6', value: '15.4', note: '' },
+  { id: 'seed-8', kind: 'weight', date: '2026-08-02', pet: '7', value: '18.0', note: '' },
+  {
+    id: 'seed-9', kind: 'weight', date: '2026-08-02', pet: '8', value: '18.0',
+    unconfirmed: true,
+    unconfirmedReason: '過去引き継ぎ情報に同日6.1gの記載あり（3.6g・6.1gは測定日未確認）。確認できるまで確定グラフから除外。',
+    note: ''
+  }
+];
+
+const INITIAL_PAST_FEEDS = [
+  { id: 'seed-10', kind: 'feed', date: '2026-06-14', pet: '8', food: '冷凍フタホシ', count: '', supp: '', result: '', note: '置き餌で摂餌開始' },
+  { id: 'seed-11', kind: 'feed', date: '2026-06-18', pet: '8', food: 'デュビア', count: '', supp: '', result: '', note: '極小を摂餌' },
+  { id: 'seed-12', kind: 'feed', date: '2026-07-03', pet: '8', food: '', count: '2', supp: '④ RVM', result: '', note: 'RVM粉、2個完食。餌の種類は未確認。' }
+];
+
+const INITIAL_BREEDS = [
+  { id: 'seed-13', kind: 'breed', date: '2026-03-02', pet: '1', partner: '', child: '', note: '1st 産卵（2卵）' },
+  { id: 'seed-14', kind: 'breed', date: '2026-03-18', pet: '1', partner: '', child: '', note: '2nd 産卵（2卵）' },
+  { id: 'seed-15', kind: 'breed', date: '2026-04-03', pet: '1', partner: '', child: '', note: '3rd 産卵（1卵）' },
+  {
+    id: 'seed-16', kind: 'breed', date: '2026-05-14', pet: '1', partner: '', child: '',
+    unconfirmed: true,
+    unconfirmedReason: '第1クラッチか第2クラッチかに過去記録との食い違いあり',
+    note: '2nd 孵化。アシスト後死亡'
+  },
+  { id: 'seed-17', kind: 'breed', date: '2026-05-15', pet: '1', partner: '', child: '', note: '1st 孵化。記録時点で生存' },
+  { id: 'seed-18', kind: 'breed', date: '2026-06-06', pet: '1', partner: '2', child: '8', note: '3rd 孵化。孵化日は6/6〜7の範囲。' }
+];
+
+const RECOVERED_FEEDS = ['1', '3', '', '3', '3', '3', '4', '4', '4'].map((count, i) => ({
+  id: `${RECOVERY_ID}-${i}`,
+  kind: 'feed',
+  date: '2026-11-15',
+  pet: String(i),
+  food: '冷凍フタホシ',
+  count,
+  supp: '③ カルシウム＋D3',
+  result: i === 2 ? '食べなかった' : '食べた',
+  note: ''
+}));
+
+function buildInitialData() {
+  return {
+    pets: structuredClone(INITIAL_PETS),
+    records: [
+      ...structuredClone(INITIAL_WEIGHTS),
+      ...structuredClone(INITIAL_PAST_FEEDS),
+      ...structuredClone(INITIAL_BREEDS),
+      ...structuredClone(RECOVERED_FEEDS)
+    ],
+    recoveredFeeding: RECOVERY_ID,
+    updatedAt: Date.now()
+  };
+}
+
+/** 既存データ（旧バージョンJSON等）を安全に正規化しつつ、復元9件の重複・復活を防ぐ */
+function normalizeAndMerge(raw) {
+  if (!raw || !Array.isArray(raw.pets) || !Array.isArray(raw.records)) {
+    return buildInitialData();
+  }
+  // ペットの欠損フィールド補完（既存値は上書きしない）
+  const pets = raw.pets.map((p, idx) => {
+    const def = INITIAL_PETS.find(d => d.id === String(p.id)) || INITIAL_PETS[idx] || {};
+    return {
+      id: String(p.id ?? idx),
+      name: p.name ?? def.name ?? '',
+      sex: p.sex ?? def.sex ?? '未判別',
+      morph: p.morph ?? def.morph ?? '',
+      acquired: p.acquired ?? def.acquired ?? '',
+      hatched: p.hatched !== undefined ? p.hatched : (def.hatched ?? ''),
+      source: p.source ?? def.source ?? '',
+      mother: p.mother !== undefined ? p.mother : (def.mother ?? ''),
+      father: p.father !== undefined ? p.father : (def.father ?? ''),
+      note: p.note ?? def.note ?? ''
+    };
+  });
+
+  // 既存記録に要確認フラグが抜けている初期シードがあれば補完（ユーザーが明示的に confirmedByUser:true にした場合は維持）
+  const records = raw.records.map(r => {
+    const copy = { ...r };
+    if (copy.id === 'seed-9' && !copy.confirmedByUser && copy.unconfirmed === undefined) {
+      copy.unconfirmed = true;
+      copy.unconfirmedReason = INITIAL_WEIGHTS[8].unconfirmedReason;
+    }
+    if (copy.id === 'seed-16' && !copy.confirmedByUser && copy.unconfirmed === undefined) {
+      copy.unconfirmed = true;
+      copy.unconfirmedReason = INITIAL_BREEDS[3].unconfirmedReason;
+    }
+    return copy;
+  });
+
+  let recoveredFeeding = raw.recoveredFeeding || '';
+  if (recoveredFeeding !== RECOVERY_ID) {
+    const fields = ['kind', 'date', 'pet', 'food', 'count', 'supp', 'result', 'note'];
+    const additions = RECOVERED_FEEDS.filter(rec =>
+      !records.some(ex => ex.id === rec.id || fields.every(f => String(ex[f] ?? '') === String(rec[f] ?? '')))
+    );
+    records.push(...additions);
+    recoveredFeeding = RECOVERY_ID;
+  }
+
+  return {
+    pets,
+    records,
+    recoveredFeeding,
+    updatedAt: raw.updatedAt || Date.now()
+  };
+}
+
+// ============================================================================
+// 2. 日付・ユーティリティ（日本時間 Asia/Tokyo 基準）
+// ============================================================================
+function todayJST() {
+  return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Tokyo' }).format(new Date());
+}
+function diffDaysJST(fromDateStr, toDateStr = todayJST()) {
+  if (!fromDateStr || !toDateStr) return null;
+  const t1 = Date.parse(fromDateStr + 'T00:00:00+09:00');
+  const t2 = Date.parse(toDateStr + 'T00:00:00+09:00');
+  if (Number.isNaN(t1) || Number.isNaN(t2)) return null;
+  return Math.round((t2 - t1) / 86400000);
+}
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function uid() {
+  return globalThis.crypto?.randomUUID?.() || ('rec-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8));
+}
+function sortRecordsDesc(list) {
+  return list.slice().sort((a, b) => {
+    const d = String(b.date || '').localeCompare(String(a.date || ''));
+    if (d !== 0) return d;
+    return String(b.id || '').localeCompare(String(a.id || ''));
+  });
+}
+
+// ============================================================================
+// 3. アプリ状態 & ストレージ管理
+// ============================================================================
+const state = {
+  testMode: false,
+  storageOk: true,
+  cloudStatus: 'off', // 'off' | 'connecting' | 'synced' | 'error'
+  cloudUser: null,
+  autoSync: true,
+  data: buildInitialData(),
+  tab: '個体',
+  selectedPetId: '',
+  // フィルター
+  petQuery: '',
+  petSexFilter: '',
+  recPetFilter: '',
+  recKindFilter: '',
+  recDateFilter: '',
+  // 給餌入力ドラフト（タブ移動しても保持）
+  feedDate: todayJST(),
+  feedDraft: {}, // { [petId]: { items: [{food,count,supp}], result, note } }
+  feedErrors: [],
+  feedDupWarning: false,
+  // JSON復元プレビュー
+  restorePreview: null,
+};
+
+function currentStorageKey() {
+  return state.testMode ? STORAGE_KEY_TEST : STORAGE_KEY_PROD;
+}
+
+function loadFromLocalStorage() {
+  const key = currentStorageKey();
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      state.data = normalizeAndMerge(JSON.parse(raw));
+    } else {
+      state.data = buildInitialData();
+    }
+    localStorage.setItem(key, JSON.stringify(state.data));
+    state.storageOk = true;
+  } catch (e) {
+    state.storageOk = false;
+    state.data = buildInitialData();
+  }
+  updateSaveBadge();
+}
+
+function persistData(nextData, successMsg) {
+  nextData.updatedAt = Date.now();
+  state.data = nextData;
+  const key = currentStorageKey();
+  try {
+    localStorage.setItem(key, JSON.stringify(state.data));
+    state.storageOk = true;
+  } catch (e) {
+    state.storageOk = false;
+  }
+  updateSaveBadge();
+
+  if (state.storageOk) {
+    showStatus(successMsg + (state.testMode ? '（テスト領域に保存）' : '（ブラウザに保存済み）'), 'ok');
+  } else {
+    showStatus('画面に一時反映しました（この環境ではブラウザ保存不可。閉じる前にJSON書き出しを行ってください）', 'warn');
+  }
+
+  // クラウド自動同期（テストモード時は本番クラウドへ自動送信しない）
+  if (!state.testMode && state.autoSync && state.cloudUser && fbClient.db) {
+    pushToCloud(true);
+  }
+  return true;
+}
+
+function loadDraft() {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.feedDate) state.feedDate = parsed.feedDate;
+      if (parsed.feedDraft) state.feedDraft = parsed.feedDraft;
+    }
+  } catch {}
+}
+function saveDraft() {
+  try {
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
+      feedDate: state.feedDate,
+      feedDraft: state.feedDraft
+    }));
+  } catch {}
+}
+function ensureDraftForPet(petId) {
+  if (!state.feedDraft[petId]) {
+    state.feedDraft[petId] = { items: [{ food: '', count: '', supp: '' }], result: '', note: '' };
+  }
+  if (!Array.isArray(state.feedDraft[petId].items) || !state.feedDraft[petId].items.length) {
+    state.feedDraft[petId].items = [{ food: '', count: '', supp: '' }];
+  }
+  return state.feedDraft[petId];
+}
+
+function updateSaveBadge() {
+  const badge = document.getElementById('save-badge');
+  const txt = document.getElementById('save-badge-text');
+  const banner = document.getElementById('test-banner');
+  banner.classList.toggle('hidden', !state.testMode);
+
+  badge.className = 'save-badge';
+  if (state.testMode) {
+    badge.classList.add('test');
+    txt.textContent = state.storageOk ? 'テスト保存モード' : 'テスト（一時反映のみ）';
+    return;
+  }
+  if (state.cloudStatus === 'synced' && state.cloudUser) {
+    badge.classList.add('cloud');
+    txt.textContent = 'クラウド同期済み';
+  } else if (state.cloudStatus === 'connecting') {
+    badge.classList.add('warn');
+    txt.textContent = 'クラウド接続中...';
+  } else if (state.storageOk) {
+    badge.classList.add('ok');
+    txt.textContent = 'ローカル保存済み';
+  } else {
+    badge.classList.add('warn');
+    txt.textContent = '一時反映のみ（保存不可）';
+  }
+}
+
+let statusTimer = null;
+function showStatus(msg, type = 'ok') {
+  const el = document.getElementById('status-msg');
+  el.textContent = msg;
+  el.className = `status-msg show ${type}`;
+  clearTimeout(statusTimer);
+  statusTimer = setTimeout(() => { el.classList.remove('show'); }, 6000);
+}
+
+// ============================================================================
+// 4. Firebase クラウド同期モジュール（任意設定・案B）
+// ============================================================================
+const fbClient = {
+  app: null, auth: null, db: null,
+  mods: null,
+  config: null
+};
+
+function loadSavedFbConfig() {
+  try {
+    const raw = localStorage.getItem(FB_CONFIG_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      fbClient.config = parsed.config || null;
+      state.autoSync = parsed.autoSync !== false;
+    }
+  } catch {}
+}
+
+async function initFirebaseIfConfigured(silent = true) {
+  if (!fbClient.config || !fbClient.config.apiKey || !fbClient.config.projectId) return false;
+  try {
+    state.cloudStatus = 'connecting';
+    updateSaveBadge();
+    if (!fbClient.mods) {
+      const [appMod, authMod, fsMod] = await Promise.all([
+        import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js'),
+        import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js')
+      ]);
+      fbClient.mods = { appMod, authMod, fsMod };
+    }
+    const { appMod, authMod, fsMod } = fbClient.mods;
+    const existing = appMod.getApps().find(a => a.name === 'nishiaf-cloud');
+    fbClient.app = existing || appMod.initializeApp(fbClient.config, 'nishiaf-cloud');
+    fbClient.auth = authMod.getAuth(fbClient.app);
+    fbClient.db = fsMod.getFirestore(fbClient.app);
+
+    authMod.onAuthStateChanged(fbClient.auth, async (user) => {
+      state.cloudUser = user || null;
+      if (user) {
+        state.cloudStatus = 'synced';
+        updateSaveBadge();
+        if (!state.testMode) await pullFromCloud(true);
+      } else {
+        state.cloudStatus = 'off';
+        updateSaveBadge();
+      }
+      if (state.tab === 'バックアップ・同期') render();
+    });
+    return true;
+  } catch (err) {
+    state.cloudStatus = 'error';
+    updateSaveBadge();
+    if (!silent) showStatus('Firebase初期化エラー: ' + (err.message || err), 'danger');
+    return false;
+  }
+}
+
+async function cloudLoginGoogle() {
+  if (!fbClient.auth) {
+    const ok = await initFirebaseIfConfigured(false);
+    if (!ok) return;
+  }
+  try {
+    const { GoogleAuthProvider, signInWithPopup } = fbClient.mods.authMod;
+    await signInWithPopup(fbClient.auth, new GoogleAuthProvider());
+    showStatus('Googleアカウントでログインしました。', 'ok');
+  } catch (err) {
+    showStatus('Googleログイン失敗: ' + (err.message || err), 'danger');
+  }
+}
+
+async function cloudLoginAnon() {
+  if (!fbClient.auth) {
+    const ok = await initFirebaseIfConfigured(false);
+    if (!ok) return;
+  }
+  try {
+    await fbClient.mods.authMod.signInAnonymously(fbClient.auth);
+    showStatus('匿名アカウントでクラウド接続しました。', 'ok');
+  } catch (err) {
+    showStatus('匿名ログイン失敗: ' + (err.message || err), 'danger');
+  }
+}
+
+async function cloudLogout() {
+  if (!fbClient.auth) return;
+  await fbClient.mods.authMod.signOut(fbClient.auth);
+  state.cloudUser = null;
+  state.cloudStatus = 'off';
+  updateSaveBadge();
+  showStatus('クラウドからログアウトしました。', 'ok');
+  render();
+}
+
+async function pushToCloud(silent = false) {
+  if (!fbClient.db || !state.cloudUser) return;
+  if (state.testMode) {
+    if (!silent) showStatus('テストモード中はクラウドへ送信しません。', 'warn');
+    return;
+  }
+  try {
+    const { doc, setDoc } = fbClient.mods.fsMod;
+    const ref = doc(fbClient.db, 'nishiaf_users', state.cloudUser.uid, 'data', 'main');
+    await setDoc(ref, state.data);
+    state.cloudStatus = 'synced';
+    updateSaveBadge();
+    if (!silent) showStatus('クラウドへ最新データを送信しました。', 'ok');
+  } catch (err) {
+    state.cloudStatus = 'error';
+    updateSaveBadge();
+    if (!silent) showStatus('クラウド送信エラー: ' + (err.message || err), 'danger');
+  }
+}
+
+async function pullFromCloud(silent = false) {
+  if (!fbClient.db || !state.cloudUser || state.testMode) return;
+  try {
+    const { doc, getDoc } = fbClient.mods.fsMod;
+    const ref = doc(fbClient.db, 'nishiaf_users', state.cloudUser.uid, 'data', 'main');
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      const remote = normalizeAndMerge(snap.data());
+      if (!silent || (remote.updatedAt || 0) > (state.data.updatedAt || 0)) {
+        state.data = remote;
+        try { localStorage.setItem(STORAGE_KEY_PROD, JSON.stringify(state.data)); } catch {}
+        render();
+        if (!silent) showStatus('クラウドから最新データを読み込みました。', 'ok');
+      }
+    } else if (!silent) {
+      showStatus('クラウドにまだデータがありません。「クラウドへ送信」を実行してください。', 'warn');
+    }
+    state.cloudStatus = 'synced';
+    updateSaveBadge();
+  } catch (err) {
+    state.cloudStatus = 'error';
+    updateSaveBadge();
+    if (!silent) showStatus('クラウド読込エラー: ' + (err.message || err), 'danger');
+  }
+}
+
+// ============================================================================
+// 5. データ集計・表示ヘルパー
+// ============================================================================
+function getPet(id) {
+  return state.data.pets.find(p => p.id === String(id)) || null;
+}
+function petName(id) {
+  return getPet(id)?.name || '未判別';
+}
+
+/** 給餌レコードの餌アイテム配列を統一取得（後方互換対応） */
+function getFeedItems(r) {
+  if (Array.isArray(r.items) && r.items.length > 0) {
+    return r.items;
+  }
+  return [{ food: r.food ?? '', count: r.count ?? '', supp: r.supp ?? '' }];
+}
+
+/** 確定済み最新体重 */
+function latestConfirmedWeight(petId) {
+  const today = todayJST();
+  return sortRecordsDesc(
+    state.data.records.filter(r => r.kind === 'weight' && r.pet === petId && !r.unconfirmed && r.date <= today)
+  )[0] || null;
+}
+
+/** 最終摂餌日（result === '食べた' のみ） */
+function latestEatenFeed(petId) {
+  const today = todayJST();
+  return sortRecordsDesc(
+    state.data.records.filter(r => r.kind === 'feed' && r.pet === petId && r.result === '食べた' && r.date <= today)
+  )[0] || null;
+}
+
+/** 最終給餌記録日（結果問わず） */
+function latestAnyFeed(petId) {
+  const today = todayJST();
+  return sortRecordsDesc(
+    state.data.records.filter(r => r.kind === 'feed' && r.pet === petId && r.date <= today)
+  )[0] || null;
+}
+
+function formatFeedElapsed(petId) {
+  const eaten = latestEatenFeed(petId);
+  const anyFeed = latestAnyFeed(petId);
+  const eatenDays = eaten ? diffDaysJST(eaten.date) : null;
+  const mainText = eatenDays !== null ? `最終摂餌から${eatenDays}日（${eaten.date}）` : '最終摂餌日: 未確定';
+  let subText = '';
+  if (anyFeed && (!eaten || anyFeed.date !== eaten.date)) {
+    const resLabel = anyFeed.result || '未判別';
+    subText = `最終給餌記録: ${anyFeed.date}（${resLabel}）`;
+  }
+  return { mainText, subText, eaten, anyFeed };
+}
+
+function formatRecordSummary(r) {
+  if (r.kind === 'feed') {
+    const items = getFeedItems(r);
+    const itemsText = items.map(it => {
+      const f = it.food || '餌未判別';
+      const c = (it.count !== '' && it.count != null) ? `${it.count}匹` : '数未入力';
+      const s = it.supp || '添加未判別';
+      return `${f} / ${c} / ${s}`;
+    }).join(' ＋ ');
+    const res = r.result || '結果未判別';
+    return `${itemsText} 【${res}】`;
+  }
+  if (r.kind === 'weight') {
+    return `${r.value} g` + (r.unconfirmed ? '（要確認）' : '');
+  }
+  if (r.kind === 'health') {
+    return r.category || 'その他';
+  }
+  if (r.kind === 'breed') {
+    return `母: ${petName(r.pet)} ／ 父: ${petName(r.partner)} ／ 子: ${r.child ? petName(r.child) : '未登録・未判別'}`;
+  }
+  return '';
+}
+
+function optionsHtml(list, selectedVal, emptyLabel) {
+  let html = emptyLabel !== undefined ? `<option value="">${esc(emptyLabel)}</option>` : '';
+  for (const item of list) {
+    const [val, label] = Array.isArray(item) ? item : [item, item];
+    html += `<option value="${esc(val)}" ${String(val) === String(selectedVal ?? '') ? 'selected' : ''}>${esc(label)}</option>`;
+  }
+  return html;
+}
+function petOptionsHtml(selectedVal, emptyLabel) {
+  return optionsHtml(state.data.pets.map(p => [p.id, `${Number(p.id) + 1}. ${p.name}`]), selectedVal, emptyLabel);
+}
+
+// ============================================================================
+// 6. モーダル & 確認ダイアログ
+// ============================================================================
+function openModal(title, bodyHtml, footHtml) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = bodyHtml;
+  document.getElementById('modal-foot').innerHTML = footHtml;
+  document.getElementById('modal-backdrop').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal-backdrop').classList.remove('open');
+}
+document.getElementById('modal-close').addEventListener('click', closeModal);
+document.getElementById('modal-backdrop').addEventListener('click', (e) => {
+  if (e.target.id === 'modal-backdrop') closeModal();
+});
+
+function showConfirm(title, message, onOk) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-body').innerHTML = `<p style="margin:0;white-space:pre-wrap">${esc(message)}</p>`;
+  const bd = document.getElementById('confirm-backdrop');
+  bd.classList.add('open');
+  const cancelBtn = document.getElementById('confirm-cancel');
+  const okBtn = document.getElementById('confirm-ok');
+  const cleanup = () => { bd.classList.remove('open'); cancelBtn.onclick = null; okBtn.onclick = null; };
+  cancelBtn.onclick = cleanup;
+  okBtn.onclick = () => { cleanup(); onOk(); };
+}
+
+// ============================================================================
+// 7. 画面レンダリング
+// ============================================================================
+function render() {
+  const nav = document.getElementById('nav');
+  const tabs = ['個体', '給餌入力', '日付別記録', '繁殖', 'バックアップ・同期'];
+  nav.innerHTML = tabs.map(t =>
+    `<button type="button" class="${t === state.tab ? 'active' : 'secondary'}" data-nav="${esc(t)}">${esc(t)}</button>`
+  ).join('');
+
+  const app = document.getElementById('app');
+  if (state.tab === '個体' && state.selectedPetId !== '') {
+    renderPetDetail(app, state.selectedPetId);
+  } else if (state.tab === '個体') {
+    renderPetList(app);
+  } else if (state.tab === '給餌入力') {
+    renderBatchFeed(app);
+  } else if (state.tab === '日付別記録') {
+    renderRecordsByDate(app);
+  } else if (state.tab === '繁殖') {
+    renderBreeding(app);
+  } else {
+    renderBackupSync(app);
+  }
+}
+
+/** 7-1. 個体一覧 */
+function renderPetList(app) {
+  app.innerHTML = `
+    <div class="row spread" style="margin-bottom:10px">
+      <h2 style="margin:0">個体一覧（9匹・給餌順）</h2>
+      <span class="mini">基準日: ${todayJST()} (JST)</span>
+    </div>
+    <div class="row" style="margin-bottom:12px">
+      <input id="pet-search" type="search" value="${esc(state.petQuery)}" placeholder="名前・モルフで検索..." style="flex:1;min-width:160px">
+      <select id="pet-sex-filter" style="width:auto;min-width:130px">
+        ${optionsHtml(['♀', '♂', '未判別'], state.petSexFilter, 'すべての性別')}
+      </select>
+    </div>
+    <div id="pet-grid" class="grid"></div>
+  `;
+  renderPetGrid();
+  document.getElementById('pet-search').addEventListener('input', e => {
+    state.petQuery = e.target.value;
+    renderPetGrid();
+  });
+  document.getElementById('pet-sex-filter').addEventListener('change', e => {
+    state.petSexFilter = e.target.value;
+    renderPetGrid();
+  });
+}
+
+function renderPetGrid() {
+  const grid = document.getElementById('pet-grid');
+  if (!grid) return;
+  const q = state.petQuery.trim().toLowerCase();
+  const filtered = state.data.pets.filter(p => {
+    if (state.petSexFilter && p.sex !== state.petSexFilter) return false;
+    if (q && !`${p.name} ${p.morph}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="card"><p class="muted" style="margin:0">条件に一致する個体がいません。</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map((p) => {
+    const w = latestConfirmedWeight(p.id);
+    const hasUnconfirmedW = state.data.records.some(r => r.kind === 'weight' && r.pet === p.id && r.unconfirmed);
+    const feedInfo = formatFeedElapsed(p.id);
+    return `
+      <button type="button" class="pet-card" data-open-pet="${esc(p.id)}">
+        <div class="pet-card-head">
+          <div class="pet-name">
+            <span class="pet-order">${Number(p.id) + 1}</span>
+            <span>${esc(p.name)}</span>
+          </div>
+          <span class="tag">${esc(p.sex)}</span>
+        </div>
+        <p class="muted" style="margin:0 0 8px">${esc(p.morph || 'モルフ未判別')}</p>
+        <div class="row" style="gap:6px;margin-bottom:6px">
+          <span class="tag muted-tag">確定体重: ${w ? `${esc(w.value)}g (${w.date})` : '未登録'}</span>
+          ${hasUnconfirmedW ? `<span class="tag warn-tag">要確認体重あり</span>` : ''}
+        </div>
+        <div class="mini" style="color:var(--text)">${esc(feedInfo.mainText)}</div>
+        ${feedInfo.subText ? `<div class="mini">${esc(feedInfo.subText)}</div>` : ''}
+      </button>
+    `;
+  }).join('');
+}
+
+/** 7-2. 個体別ダッシュボード */
+function renderPetDetail(app, petId) {
+  const p = getPet(petId);
+  if (!p) { state.selectedPetId = ''; render(); return; }
+  const w = latestConfirmedWeight(p.id);
+  const feedInfo = formatFeedElapsed(p.id);
+  const unconfirmedWeights = sortRecordsDesc(state.data.records.filter(r => r.kind === 'weight' && r.pet === p.id && r.unconfirmed));
+  const petRecords = state.data.records.filter(r => [r.pet, r.partner, r.child].includes(p.id));
+
+  // 親子関係
+  const children = state.data.pets.filter(c => c.mother === p.id || c.father === p.id);
+  const motherPet = p.mother ? getPet(p.mother) : null;
+  const fatherPet = p.father ? getPet(p.father) : null;
+
+  app.innerHTML = `
+    <div class="row spread" style="margin-bottom:10px">
+      <button type="button" class="small secondary" data-back-pets>← 個体一覧</button>
+      <button type="button" class="small secondary" data-edit-profile="${esc(p.id)}">プロフィール編集</button>
+    </div>
+
+    <section class="box">
+      <div class="row spread" style="margin-bottom:6px">
+        <div class="pet-name">
+          <span class="pet-order">${Number(p.id) + 1}</span>
+          <span>${esc(p.name)}</span>
+          <span class="tag">${esc(p.sex)}</span>
+        </div>
+      </div>
+      <p style="font-weight:600;margin-bottom:8px">${esc(p.morph || 'モルフ未判別')}</p>
+      <div class="grid-2" style="gap:6px;margin-bottom:8px">
+        <div class="mini">お迎え日: <strong style="color:var(--text)">${esc(p.acquired || '未登録')}</strong></div>
+        <div class="mini">孵化日: <strong style="color:var(--text)">${esc(p.hatched || '未登録')}</strong></div>
+        <div class="mini">入手先: <strong style="color:var(--text)">${esc(p.source || '未登録')}</strong></div>
+      </div>
+      ${p.note ? `<p class="muted" style="background:var(--card-2);padding:8px 10px;border-radius:10px;margin-bottom:8px">${esc(p.note)}</p>` : ''}
+      <div class="row" style="gap:6px">
+        <span class="tag ok-tag">最新確定体重: ${w ? `${esc(w.value)} g (${w.date})` : '未登録'}</span>
+        <span class="tag muted-tag">${esc(feedInfo.mainText)}</span>
+      </div>
+      ${feedInfo.subText ? `<div class="mini" style="margin-top:4px">${esc(feedInfo.subText)}</div>` : ''}
+    </section>
+
+    <section class="box">
+      <h3>親子関係</h3>
+      <div class="row" style="gap:8px;font-size:13px">
+        <span>母: ${motherPet ? `<button type="button" class="small secondary" data-open-pet="${esc(motherPet.id)}">${esc(motherPet.name)}</button>` : '未設定'}</span>
+        <span>父: ${fatherPet ? `<button type="button" class="small secondary" data-open-pet="${esc(fatherPet.id)}">${esc(fatherPet.name)}</button>` : '未設定'}</span>
+        <span>子: ${children.length ? children.map(c => `<button type="button" class="small secondary" data-open-pet="${esc(c.id)}">${esc(c.name)}</button>`).join(' ') : 'なし'}</span>
+      </div>
+    </section>
+
+    <section class="box">
+      <h3>体重推移グラフ（確定データのみ）</h3>
+      <div id="weight-chart-area"></div>
+      ${unconfirmedWeights.length ? `
+        <div class="unconfirmed-box">
+          <h4>⚠ 要確認の体重データ（確定グラフから除外中）</h4>
+          ${unconfirmedWeights.map(uw => `
+            <div style="margin-bottom:8px;font-size:13px">
+              <strong>${esc(uw.date)}：${esc(uw.value)} g</strong>
+              <div class="mini" style="color:#f5d5a6;margin:2px 0 6px">${esc(uw.unconfirmedReason || '確認待ち')}</div>
+              <div class="row">
+                <button type="button" class="small primary" data-confirm-record="${esc(uw.id)}">この値で確定する</button>
+                <button type="button" class="small secondary" data-edit-rec="${esc(uw.id)}">編集</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+    </section>
+
+    <div class="row" style="margin-bottom:12px">
+      ${Object.entries(KINDS).map(([k, label]) =>
+        `<button type="button" class="small primary" data-new-rec="${k}" data-pet-id="${esc(p.id)}">＋ ${label}</button>`
+      ).join('')}
+    </div>
+
+    <h3>この個体の記録（${petRecords.length}件）</h3>
+    ${renderRecordCardsHtml(petRecords)}
+  `;
+
+  drawWeightChart(p.id);
+}
+
+function drawWeightChart(petId) {
+  const root = document.getElementById('weight-chart-area');
+  if (!root) return;
+  const rs = sortRecordsDesc(state.data.records.filter(r => r.kind === 'weight' && r.pet === petId && !r.unconfirmed)).reverse();
+  if (!rs.length) {
+    root.innerHTML = `<p class="muted" style="margin:0">確定済みの体重記録はまだありません。</p>`;
+    return;
+  }
+  root.innerHTML = `
+    <div class="chart-wrap"><canvas class="weight-canvas" role="img" aria-label="確定体重の推移グラフ"></canvas></div>
+    <details>
+      <summary>確定済みの測定値一覧（${rs.length}件）</summary>
+      ${rs.map(r => `<div class="row spread" style="padding:4px 0;border-bottom:1px solid var(--border);font-size:13px"><span>${esc(r.date)}</span><strong>${esc(r.value)} g</strong></div>`).join('')}
+    </details>
+  `;
+  const canvas = root.querySelector('canvas');
+  requestAnimationFrame(() => {
+    const w = canvas.clientWidth || 300, h = 210, dpr = window.devicePixelRatio || 1;
+    canvas.width = w * dpr; canvas.height = h * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.font = '12px system-ui';
+    const vals = rs.map(r => Number(r.value));
+    const times = rs.map(r => Date.parse(r.date + 'T00:00:00+09:00'));
+    const low = Math.max(0, Math.min(...vals) - 3);
+    const high = Math.max(...vals) + 3;
+    const start = times[0], end = times[times.length - 1];
+    const pts = vals.map((v, i) => [
+      46 + (w - 64) * (start === end ? 0.5 : (times[i] - start) / (end - start)),
+      170 - ((v - low) / (high - low || 1)) * 145
+    ]);
+
+    for (let i = 0; i <= 4; i++) {
+      const y = 170 - i * 36.25;
+      ctx.fillStyle = '#b5b0ba';
+      ctx.fillText((low + (high - low) * i / 4).toFixed(1), 2, y + 4);
+      ctx.strokeStyle = '#2d2b31';
+      ctx.beginPath(); ctx.moveTo(46, y); ctx.lineTo(w - 14, y); ctx.stroke();
+    }
+    ctx.strokeStyle = '#e8bc77'; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+    ctx.stroke();
+
+    ctx.fillStyle = '#f3cf94';
+    pts.forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 4.5, 0, Math.PI * 2); ctx.fill(); });
+    ctx.fillStyle = '#b5b0ba';
+    ctx.fillText(rs[0].date, 46, 196);
+    if (start !== end) ctx.fillText(rs[rs.length - 1].date, Math.max(120, w - 88), 196);
+  });
+}
+
+/** 7-3. 日付別の給餌入力（9匹固定順・複数餌対応・入力途中保持） */
+function renderBatchFeed(app) {
+  const existingToday = state.data.records.filter(r => r.kind === 'feed' && r.date === state.feedDate);
+  const existingPetIds = new Set(existingToday.map(r => r.pet));
+
+  app.innerHTML = `
+    <h2>日付別の給餌入力</h2>
+    <p class="muted">記録する個体だけ入力してまとめて保存できます。入力途中の内容は別タブへ移っても保持されます。</p>
+    <datalist id="food-datalist">${FOOD_CANDIDATES.map(f => `<option value="${esc(f)}">`).join('')}</datalist>
+
+    <section class="box">
+      <div class="row spread">
+        <label class="field" style="flex:1;margin:0;min-width:170px">
+          給餌日（過去日も選択可）
+          <input type="date" id="batch-feed-date" value="${esc(state.feedDate)}">
+        </label>
+        <button type="button" class="small secondary" id="batch-clear-draft" style="margin-top:18px">入力をリセット</button>
+      </div>
+      ${existingToday.length ? `
+        <div class="mini" style="margin-top:8px;color:var(--warn)">
+          この日（${esc(state.feedDate)}）には既に ${existingToday.length} 件の給餌記録があります。
+          <button type="button" class="small secondary" data-jump-date="${esc(state.feedDate)}" style="margin-left:6px">既存記録を確認・編集</button>
+        </div>
+      ` : ''}
+    </section>
+
+    <div class="grid" id="batch-cards">
+      ${state.data.pets.map((p, idx) => {
+        const d = ensureDraftForPet(p.id);
+        const feedInfo = formatFeedElapsed(p.id);
+        const hasToday = existingPetIds.has(p.id);
+        return `
+          <section class="box" data-draft-pet="${esc(p.id)}" style="margin-bottom:0">
+            <div class="row spread" style="margin-bottom:4px">
+              <div class="pet-name" style="font-size:17px">
+                <span class="pet-order">${idx + 1}</span>
+                <span>${esc(p.name)}</span>
+              </div>
+              ${hasToday ? `<span class="tag warn-tag">同日記録あり</span>` : ''}
+            </div>
+            <div class="mini" style="margin-bottom:8px">${esc(feedInfo.mainText)}</div>
+
+            <div class="food-items-container">
+              ${d.items.map((it, itemIdx) => `
+                <div class="food-item-row" data-item-idx="${itemIdx}">
+                  <div class="food-item-head">
+                    <span>餌 ${itemIdx + 1}</span>
+                    ${d.items.length > 1 ? `<button type="button" class="small danger-btn" data-remove-food-item="${esc(p.id)}:${itemIdx}" style="min-height:30px;padding:2px 8px;font-size:12px">削除</button>` : ''}
+                  </div>
+                  <label class="field" style="margin:4px 0">
+                    餌の種類
+                    <input type="text" list="food-datalist" data-draft-field="food" data-pet="${esc(p.id)}" data-idx="${itemIdx}" value="${esc(it.food)}" placeholder="選択または自由入力">
+                  </label>
+                  <div class="grid-2" style="gap:6px">
+                    <label class="field" style="margin:4px 0">
+                      給餌数（空欄可）
+                      <input type="number" min="0" step="1" inputmode="numeric" data-draft-field="count" data-pet="${esc(p.id)}" data-idx="${itemIdx}" value="${esc(it.count)}" placeholder="空欄＝未入力">
+                    </label>
+                    <label class="field" style="margin:4px 0">
+                      添加
+                      <select data-draft-field="supp" data-pet="${esc(p.id)}" data-idx="${itemIdx}">
+                        ${optionsHtml(SUPPLEMENTS, it.supp, '未判別')}
+                      </select>
+                    </label>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+
+            <button type="button" class="small secondary" data-add-food-item="${esc(p.id)}" style="width:100%;margin-bottom:8px">＋ 餌の種類を追加（2種類以上）</button>
+
+            <label class="field" style="margin:4px 0">
+              摂餌結果
+              <select data-draft-field="result" data-pet="${esc(p.id)}">
+                ${optionsHtml(['食べた', '食べなかった'], d.result, '未判別')}
+              </select>
+            </label>
+            <label class="field" style="margin:4px 0">
+              メモ（餌サイズ等）
+              <input type="text" data-draft-field="note" data-pet="${esc(p.id)}" value="${esc(d.note)}" placeholder="任意">
+            </label>
+          </section>
+        `;
+      }).join('')}
+    </div>
+
+    ${state.feedErrors.length ? `
+      <div class="error-list" role="alert">
+        <strong>入力内容を確認してください：</strong>
+        <ul>${state.feedErrors.map(e => `<li>${esc(e)}</li>`).join('')}</ul>
+      </div>
+    ` : ''}
+
+    ${state.feedDupWarning ? `
+      <div class="unconfirmed-box" role="alert">
+        <h4>同日（${esc(state.feedDate)}）の給餌記録が既に存在します</h4>
+        <p class="mini" style="color:var(--text);margin-bottom:8px">同日の別給餌として追加するか、既存記録を編集するか選んでください。</p>
+        <div class="row">
+          <button type="button" class="primary" id="btn-save-batch-additional">別の給餌として追加保存</button>
+          <button type="button" class="secondary" data-jump-date="${esc(state.feedDate)}">既存記録を編集する</button>
+        </div>
+      </div>
+    ` : ''}
+
+    <div class="sticky-save-bar">
+      <span class="mini">未入力の個体は自動登録されません</span>
+      <button type="button" class="primary" id="btn-save-batch">入力した個体をまとめて保存</button>
+    </div>
+  `;
+
+  document.getElementById('batch-feed-date').addEventListener('change', e => {
+    state.feedDate = e.target.value || todayJST();
+    state.feedDupWarning = false;
+    saveDraft();
+    render();
+  });
+  document.getElementById('batch-clear-draft').addEventListener('click', () => {
+    showConfirm('入力内容をリセット', '現在入力途中の給餌フォームをすべて空にしますか？', () => {
+      state.feedDraft = {};
+      state.feedErrors = [];
+      state.feedDupWarning = false;
+      saveDraft();
+      render();
+    });
+  });
+  document.getElementById('btn-save-batch').addEventListener('click', () => handleBatchSave(false));
+  const addBtn = document.getElementById('btn-save-batch-additional');
+  if (addBtn) addBtn.addEventListener('click', () => handleBatchSave(true));
+}
+
+function handleBatchSave(allowAdditional) {
+  state.feedErrors = [];
+  state.feedDupWarning = false;
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(state.feedDate)) {
+    state.feedErrors.push('給餌日を正しく選択してください。');
+  }
+
+  const toSave = [];
+  for (const p of state.data.pets) {
+    const d = state.feedDraft[p.id];
+    if (!d) continue;
+    const validItems = (d.items || []).map(it => ({
+      food: String(it.food ?? '').trim(),
+      count: String(it.count ?? '').trim(),
+      supp: String(it.supp ?? '').trim()
+    })).filter(it => it.food || it.count !== '' || it.supp);
+
+    const res = String(d.result ?? '').trim();
+    const note = String(d.note ?? '').trim();
+
+    if (!validItems.length && !res && !note) continue;
+
+    // 数値バリデーション（空欄はOK、入力時は0以上の整数のみ）
+    for (const it of validItems) {
+      if (it.count !== '' && !/^\d+$/.test(it.count)) {
+        state.feedErrors.push(`${p.name}: 給餌数は0以上の整数か空欄にしてください（入力値: ${it.count}）`);
+      }
+    }
+
+    const first = validItems[0] || { food: '', count: '', supp: '' };
+    const rec = {
+      id: uid(),
+      kind: 'feed',
+      date: state.feedDate,
+      pet: p.id,
+      food: first.food,
+      count: first.count,
+      supp: first.supp,
+      result: res,
+      note
+    };
+    if (validItems.length > 1) {
+      rec.items = validItems;
+    }
+    toSave.push(rec);
+  }
+
+  if (state.feedErrors.length) {
+    render();
+    return;
+  }
+  if (!toSave.length) {
+    state.feedErrors.push('少なくとも1匹分の餌・数・添加・摂餌結果・メモのいずれかを入力してください。');
+    render();
+    return;
+  }
+
+  // 同日重複チェック
+  const hasDup = toSave.some(r =>
+    state.data.records.some(ex => ex.kind === 'feed' && ex.pet === r.pet && ex.date === r.date)
+  );
+  if (hasDup && !allowAdditional) {
+    state.feedDupWarning = true;
+    render();
+    return;
+  }
+
+  const next = { ...state.data, records: [...state.data.records, ...toSave] };
+  persistData(next, `${toSave.length}件の給餌記録を保存しました`);
+  state.feedDraft = {};
+  state.feedDupWarning = false;
+  saveDraft();
+
+  // 保存直後に日付別一覧で確認できるよう遷移
+  state.tab = '日付別記録';
+  state.recDateFilter = state.feedDate;
+  state.recKindFilter = 'feed';
+  state.recPetFilter = '';
+  render();
+  window.scrollTo(0, 0);
+}
+
+/** 7-4. 日付別記録 */
+function renderRecordsByDate(app) {
+  const filtered = state.data.records.filter(r => {
+    if (state.recPetFilter && ![r.pet, r.partner, r.child].includes(state.recPetFilter)) return false;
+    if (state.recKindFilter && r.kind !== state.recKindFilter) return false;
+    if (state.recDateFilter && r.date !== state.recDateFilter) return false;
+    return true;
+  });
+
+  app.innerHTML = `
+    <h2>日付別記録（${filtered.length}件）</h2>
+    <section class="box">
+      <div class="grid-2" style="margin-bottom:8px">
+        <select id="rec-pet-filter">${petOptionsHtml(state.recPetFilter, '全個体')}</select>
+        <select id="rec-kind-filter">${optionsHtml(Object.entries(KINDS), state.recKindFilter, '全記録種別')}</select>
+        <input type="date" id="rec-date-filter" value="${esc(state.recDateFilter)}">
+        <button type="button" class="secondary" id="rec-clear-filter">絞り込み解除</button>
+      </div>
+      <div class="row">
+        ${Object.entries(KINDS).map(([k, label]) =>
+          `<button type="button" class="small primary" data-new-rec="${k}">＋ ${label}を追加</button>`
+        ).join('')}
+      </div>
+    </section>
+    ${renderRecordCardsHtml(filtered)}
+  `;
+
+  document.getElementById('rec-pet-filter').addEventListener('change', e => { state.recPetFilter = e.target.value; render(); });
+  document.getElementById('rec-kind-filter').addEventListener('change', e => { state.recKindFilter = e.target.value; render(); });
+  document.getElementById('rec-date-filter').addEventListener('change', e => { state.recDateFilter = e.target.value; render(); });
+  document.getElementById('rec-clear-filter').addEventListener('click', () => {
+    state.recPetFilter = state.recKindFilter = state.recDateFilter = '';
+    render();
+  });
+}
+
+function renderRecordCardsHtml(records) {
+  const list = sortRecordsDesc(records);
+  if (!list.length) {
+    return `<div class="card"><p class="muted" style="margin:0">該当する記録はありません。</p></div>`;
+  }
+  let lastDay = '';
+  return list.map(r => {
+    let head = '';
+    if (r.date !== lastDay) {
+      lastDay = r.date;
+      head = `<div class="date-heading"><span>${esc(r.date)}</span></div>`;
+    }
+    return head + `
+      <article class="card">
+        <div class="row spread" style="margin-bottom:6px">
+          <div class="row" style="gap:6px">
+            <strong>${esc(petName(r.pet))}</strong>
+            <span class="tag">${esc(KINDS[r.kind] || r.kind)}</span>
+            ${r.unconfirmed ? `<span class="tag warn-tag">要確認</span>` : ''}
+          </div>
+          <button type="button" class="small secondary" data-edit-rec="${esc(r.id)}">編集</button>
+        </div>
+        <p style="margin-bottom:4px">${esc(formatRecordSummary(r))}</p>
+        ${r.note ? `<div class="mini">${esc(r.note)}</div>` : ''}
+        ${r.unconfirmed && r.unconfirmedReason ? `<div class="mini" style="color:var(--warn);margin-top:4px">⚠ ${esc(r.unconfirmedReason)}</div>` : ''}
+      </article>
+    `;
+  }).join('');
+}
+
+/** 7-5. 繁殖管理 */
+function renderBreeding(app) {
+  const breeds = state.data.records.filter(r => r.kind === 'breed');
+  const familyPairs = state.data.pets.filter(p => p.mother || p.father);
+
+  app.innerHTML = `
+    <div class="row spread" style="margin-bottom:10px">
+      <h2 style="margin:0">繁殖管理・親子関係</h2>
+      <button type="button" class="small primary" data-new-rec="breed">＋ 繁殖記録</button>
+    </div>
+
+    <section class="box">
+      <h3>登録済みの親子関係</h3>
+      ${familyPairs.length ? familyPairs.map(child => `
+        <div class="row" style="padding:6px 0;border-bottom:1px solid var(--border);font-size:14px">
+          <span>母: <strong>${esc(petName(child.mother))}</strong> × 父: <strong>${esc(petName(child.father))}</strong> →</span>
+          <button type="button" class="small secondary" data-open-pet="${esc(child.id)}">${esc(child.name)}</button>
+          ${child.hatched ? `<span class="mini">（孵化: ${esc(child.hatched)}）</span>` : ''}
+        </div>
+      `).join('') : '<p class="muted" style="margin:0">親子関係はまだ登録されていません。</p>'}
+    </section>
+
+    <h3>繁殖履歴（${breeds.length}件）</h3>
+    ${renderRecordCardsHtml(breeds)}
+  `;
+}
+
+/** 7-6. バックアップ・同期・テストモード */
+function renderBackupSync(app) {
+  const cfg = fbClient.config || { apiKey: '', authDomain: '', projectId: '', appId: '' };
+  const pv = state.restorePreview;
+
+  app.innerHTML = `
+    <h2>バックアップ・クラウド同期</h2>
+
+    <!-- 1. JSONバックアップ・復元 -->
+    <section class="box">
+      <h3>JSONバックアップと復元</h3>
+      <p class="muted">現在の記録：個体 <strong>${state.data.pets.length}匹</strong> ／ 記録 <strong>${state.data.records.length}件</strong></p>
+      <div class="row" style="margin-bottom:12px">
+        <button type="button" class="primary" id="btn-export-json">JSONを書き出す</button>
+      </div>
+      <label class="field">
+        JSONファイルを選択して内容を確認（まだ上書きされません）
+        <input type="file" id="input-restore-json" accept=".json,application/json">
+      </label>
+
+      ${pv ? `
+        <div class="preview-box">
+          <h3 style="color:var(--gold)">読み込み前の内容確認</h3>
+          <p class="mini" style="color:var(--text)">
+            ファイル名: ${esc(pv.fileName)}<br>
+            個体数: ${pv.data.pets.length}匹 ／ 記録件数: ${pv.data.records.length}件<br>
+            既存データにない新規記録: <strong>${pv.newCount}件</strong>（重複ID: ${pv.dupCount}件）
+          </p>
+          <div class="row">
+            <button type="button" class="primary" id="btn-restore-merge">既存データに追加（重複除外）</button>
+            <button type="button" class="danger-btn" id="btn-restore-replace">全置換する</button>
+            <button type="button" class="secondary" id="btn-restore-cancel">キャンセル</button>
+          </div>
+        </div>
+      ` : ''}
+    </section>
+
+    <!-- 2. テストモード -->
+    <section class="box">
+      <h3>動作確認用テストモード</h3>
+      <p class="muted">本番データ（${STORAGE_KEY_PROD}）とは独立した保存領域（${STORAGE_KEY_TEST}）に切り替えます。架空のテスト記録を実データに混ぜずに動作確認できます。</p>
+      <div class="row">
+        <button type="button" class="${state.testMode ? 'danger-btn' : 'secondary'}" id="btn-toggle-test">
+          ${state.testMode ? 'テストモードを終了して本番へ戻る' : 'テストモードに切り替える'}
+        </button>
+        ${state.testMode ? `<button type="button" class="small secondary" id="btn-reset-test">テスト領域を初期化</button>` : ''}
+      </div>
+    </section>
+
+    <!-- 3. クラウド同期（Firebase） -->
+    <section class="box">
+      <h3>クラウド同期（Firebase Firestore / Auth）</h3>
+      <p class="muted">自身のFirebaseプロジェクト設定を保存してログインすると、スマホとPCで同じ記録を双方向同期できます（コレクション: <code>nishiaf_users/{uid}/data/main</code>）。</p>
+
+      <div class="grid-2">
+        <label class="field">apiKey<input type="text" id="fb-apiKey" value="${esc(cfg.apiKey)}" placeholder="AIza..."></label>
+        <label class="field">authDomain<input type="text" id="fb-authDomain" value="${esc(cfg.authDomain)}" placeholder="xxx.firebaseapp.com"></label>
+        <label class="field">projectId<input type="text" id="fb-projectId" value="${esc(cfg.projectId)}" placeholder="your-project-id"></label>
+        <label class="field">appId<input type="text" id="fb-appId" value="${esc(cfg.appId)}" placeholder="1:...:web:..."></label>
+      </div>
+
+      <div class="row" style="margin:10px 0">
+        <button type="button" class="primary small" id="btn-save-fb-cfg">Firebase設定を保存して接続</button>
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="fb-auto-sync" ${state.autoSync ? 'checked' : ''} style="width:auto;min-height:auto">
+          保存時に自動でクラウド同期
+        </label>
+      </div>
+
+      <div class="divider"></div>
+
+      ${state.cloudUser ? `
+        <p class="mini" style="color:var(--ok)">ログイン中: ${esc(state.cloudUser.email || '匿名ユーザー')} (UID: ${esc(state.cloudUser.uid)})</p>
+        <div class="row">
+          <button type="button" class="primary small" id="btn-cloud-push">クラウドへ送信</button>
+          <button type="button" class="secondary small" id="btn-cloud-pull">クラウドから読込</button>
+          <button type="button" class="danger-btn small" id="btn-cloud-logout">ログアウト</button>
+        </div>
+      ` : `
+        <div class="row">
+          <button type="button" class="primary small" id="btn-login-google">Googleでログイン</button>
+          <button type="button" class="secondary small" id="btn-login-anon">匿名ログインで試す</button>
+        </div>
+      `}
+    </section>
+  `;
+
+  // イベント登録
+  document.getElementById('btn-export-json').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(state.data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `nishiaf-backup-${todayJST()}${state.testMode ? '-test' : ''}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+    showStatus('JSONバックアップを書き出しました。', 'ok');
+  });
+
+  document.getElementById('input-restore-json').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const parsed = JSON.parse(await file.text());
+      if (!Array.isArray(parsed.pets) || !Array.isArray(parsed.records)) {
+        throw new Error('pets または records 配列が見つかりません');
+      }
+      const norm = normalizeAndMerge(parsed);
+      const existingIds = new Set(state.data.records.map(r => r.id));
+      const newCount = norm.records.filter(r => !existingIds.has(r.id)).length;
+      state.restorePreview = {
+        fileName: file.name,
+        data: norm,
+        newCount,
+        dupCount: norm.records.length - newCount
+      };
+      render();
+    } catch (err) {
+      showStatus('JSONの読み込みに失敗しました: ' + (err.message || err), 'danger');
+    }
+    e.target.value = '';
+  });
+
+  if (pv) {
+    document.getElementById('btn-restore-merge').addEventListener('click', () => {
+      const existingIds = new Set(state.data.records.map(r => r.id));
+      const additions = pv.data.records.filter(r => !existingIds.has(r.id));
+      const next = { ...state.data, records: [...state.data.records, ...additions] };
+      state.restorePreview = null;
+      persistData(next, `新規記録 ${additions.length}件を追加しました（重複 ${pv.dupCount}件は除外）`);
+      render();
+    });
+    document.getElementById('btn-restore-replace').addEventListener('click', () => {
+      showConfirm('全置換の確認', `現在の全記録（${state.data.records.length}件）を、読み込んだJSON（${pv.data.records.length}件）で完全に置き換えます。よろしいですか？`, () => {
+        const next = pv.data;
+        state.restorePreview = null;
+        persistData(next, 'バックアップデータで全置換しました');
+        render();
+      });
+    });
+    document.getElementById('btn-restore-cancel').addEventListener('click', () => {
+      state.restorePreview = null;
+      render();
+    });
+  }
+
+  document.getElementById('btn-toggle-test').addEventListener('click', () => {
+    state.testMode = !state.testMode;
+    state.restorePreview = null;
+    loadFromLocalStorage();
+    showStatus(state.testMode ? 'テストモードに切り替えました（本番データは保護されます）' : '本番モードに戻りました', 'ok');
+    render();
+  });
+  const resetTestBtn = document.getElementById('btn-reset-test');
+  if (resetTestBtn) {
+    resetTestBtn.addEventListener('click', () => {
+      showConfirm('テスト領域の初期化', 'テスト領域のデータを初期27件の状態にリセットしますか？', () => {
+        persistData(buildInitialData(), 'テスト領域を初期化しました');
+        render();
+      });
+    });
+  }
+
+  document.getElementById('btn-save-fb-cfg').addEventListener('click', async () => {
+    const newCfg = {
+      apiKey: document.getElementById('fb-apiKey').value.trim(),
+      authDomain: document.getElementById('fb-authDomain').value.trim(),
+      projectId: document.getElementById('fb-projectId').value.trim(),
+      appId: document.getElementById('fb-appId').value.trim()
+    };
+    state.autoSync = document.getElementById('fb-auto-sync').checked;
+    fbClient.config = newCfg;
+    try { localStorage.setItem(FB_CONFIG_KEY, JSON.stringify({ config: newCfg, autoSync: state.autoSync })); } catch {}
+    const ok = await initFirebaseIfConfigured(false);
+    if (ok) showStatus('Firebase設定を保存しました。ログインして同期を開始してください。', 'ok');
+  });
+
+  document.getElementById('fb-auto-sync').addEventListener('change', (e) => {
+    state.autoSync = e.target.checked;
+    try { localStorage.setItem(FB_CONFIG_KEY, JSON.stringify({ config: fbClient.config, autoSync: state.autoSync })); } catch {}
+  });
+
+  const gBtn = document.getElementById('btn-login-google');
+  if (gBtn) gBtn.addEventListener('click', cloudLoginGoogle);
+  const aBtn = document.getElementById('btn-login-anon');
+  if (aBtn) aBtn.addEventListener('click', cloudLoginAnon);
+  const pushBtn = document.getElementById('btn-cloud-push');
+  if (pushBtn) pushBtn.addEventListener('click', () => pushToCloud(false));
+  const pullBtn = document.getElementById('btn-cloud-pull');
+  if (pullBtn) pullBtn.addEventListener('click', () => pullFromCloud(false));
+  const outBtn = document.getElementById('btn-cloud-logout');
+  if (outBtn) outBtn.addEventListener('click', cloudLogout);
+}
+
+// ============================================================================
+// 8. プロフィール編集 & 記録追加/編集モーダル
+// ============================================================================
+function openProfileModal(petId) {
+  const p = getPet(petId);
+  if (!p) return;
+  const body = `
+    <form id="profile-form">
+      <label class="field">名前（必須）<input name="name" type="text" value="${esc(p.name)}" required></label>
+      <label class="field">性別<select name="sex">${optionsHtml(['♀', '♂', '未判別'], p.sex)}</select></label>
+      <label class="field">モルフ<input name="morph" type="text" value="${esc(p.morph)}"></label>
+      <div class="grid-2">
+        <label class="field">お迎え日<input name="acquired" type="date" value="${esc(p.acquired)}"></label>
+        <label class="field">孵化日（範囲表記可）<input name="hatched" type="text" value="${esc(p.hatched)}" placeholder="例: 2026-06-06〜2026-06-07"></label>
+      </div>
+      <label class="field">入手先<input name="source" type="text" value="${esc(p.source)}"></label>
+      <div class="grid-2">
+        <label class="field">母<select name="mother">${petOptionsHtml(p.mother, '未設定')}</select></label>
+        <label class="field">父<select name="father">${petOptionsHtml(p.father, '未設定')}</select></label>
+      </div>
+      <label class="field">メモ<textarea name="note">${esc(p.note)}</textarea></label>
+    </form>
+  `;
+  openModal(`${p.name} のプロフィール編集`, body, `
+    <button type="button" class="secondary" onclick="document.getElementById('modal-close').click()">キャンセル</button>
+    <button type="button" class="primary" id="save-profile-btn">保存</button>
+  `);
+  document.getElementById('save-profile-btn').addEventListener('click', () => {
+    const fd = new FormData(document.getElementById('profile-form'));
+    const name = String(fd.get('name') || '').trim();
+    if (!name) { showStatus('名前を入力してください。', 'danger'); return; }
+    const updated = {
+      ...p,
+      name,
+      sex: String(fd.get('sex') || '未判別'),
+      morph: String(fd.get('morph') || '').trim(),
+      acquired: String(fd.get('acquired') || '').trim(),
+      hatched: String(fd.get('hatched') || '').trim(),
+      source: String(fd.get('source') || '').trim(),
+      mother: String(fd.get('mother') || ''),
+      father: String(fd.get('father') || ''),
+      note: String(fd.get('note') || '').trim()
+    };
+    const next = { ...state.data, pets: state.data.pets.map(x => x.id === p.id ? updated : x) };
+    persistData(next, 'プロフィールを保存しました');
+    closeModal();
+    render();
+  });
+}
+
+function openRecordModal(record, isNew = false) {
+  const k = record.kind;
+  let modalFeedItems = k === 'feed' ? structuredClone(getFeedItems(record)) : [];
+
+  function buildBody() {
+    let specific = '';
+    if (k === 'feed') {
+      specific = `
+        <datalist id="modal-food-list">${FOOD_CANDIDATES.map(f => `<option value="${esc(f)}">`).join('')}</datalist>
+        <div id="modal-feed-items">
+          ${modalFeedItems.map((it, idx) => `
+            <div class="food-item-row">
+              <div class="food-item-head">
+                <span>餌 ${idx + 1}</span>
+                ${modalFeedItems.length > 1 ? `<button type="button" class="small danger-btn" data-m-rem="${idx}" style="min-height:28px;padding:2px 8px;font-size:12px">削除</button>` : ''}
+              </div>
+              <label class="field" style="margin:4px 0">餌の種類<input type="text" list="modal-food-list" data-m-field="food" data-m-idx="${idx}" value="${esc(it.food)}"></label>
+              <div class="grid-2" style="gap:6px">
+                <label class="field" style="margin:4px 0">給餌数（空欄可）<input type="number" min="0" step="1" data-m-field="count" data-m-idx="${idx}" value="${esc(it.count)}"></label>
+                <label class="field" style="margin:4px 0">添加<select data-m-field="supp" data-m-idx="${idx}">${optionsHtml(SUPPLEMENTS, it.supp, '未判別')}</select></label>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <button type="button" class="small secondary" id="modal-add-food" style="width:100%;margin-bottom:8px">＋ 餌の種類を追加</button>
+        <label class="field">摂餌結果<select name="result">${optionsHtml(['食べた', '食べなかった'], record.result, '未判別')}</select></label>
+      `;
+    } else if (k === 'weight') {
+      specific = `
+        <label class="field">体重（g）<input name="value" type="number" min="0.01" step="0.01" value="${esc(record.value)}" required></label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:8px 0;cursor:pointer">
+          <input type="checkbox" name="unconfirmed" ${record.unconfirmed ? 'checked' : ''} style="width:auto;min-height:auto">
+          要確認データとして扱う（確定グラフから除外）
+        </label>
+      `;
+    } else if (k === 'health') {
+      specific = `<label class="field">種類<select name="category">${optionsHtml(HEALTH_CATEGORIES, record.category || '脱皮')}</select></label>`;
+    } else if (k === 'breed') {
+      specific = `
+        <div class="grid-2">
+          <label class="field">父<select name="partner">${petOptionsHtml(record.partner, '未判別')}</select></label>
+          <label class="field">子<select name="child">${petOptionsHtml(record.child, '未登録・未判別')}</select></label>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:8px 0;cursor:pointer">
+          <input type="checkbox" name="unconfirmed" ${record.unconfirmed ? 'checked' : ''} style="width:auto;min-height:auto">
+          要確認フラグを付ける
+        </label>
+      `;
+    }
+
+    return `
+      <form id="rec-form">
+        <div class="grid-2">
+          <label class="field">日付<input name="date" type="date" value="${esc(record.date || todayJST())}" required></label>
+          <label class="field">${k === 'breed' ? '母' : '個体'}<select name="pet">${petOptionsHtml(record.pet, k === 'breed' ? '未判別' : undefined)}</select></label>
+        </div>
+        ${specific}
+        <label class="field">メモ<textarea name="note">${esc(record.note || '')}</textarea></label>
+      </form>
+    `;
+  }
+
+  function mountModal() {
+    openModal(`${KINDS[k]}を${isNew ? '登録' : '編集'}`, buildBody(), `
+      ${!isNew ? `<button type="button" class="danger-btn" id="del-rec-btn" style="margin-right:auto">削除</button>` : ''}
+      <button type="button" class="secondary" onclick="document.getElementById('modal-close').click()">キャンセル</button>
+      <button type="button" class="primary" id="save-rec-btn">保存</button>
+    `);
+
+    const bodyEl = document.getElementById('modal-body');
+    if (k === 'feed') {
+      bodyEl.addEventListener('input', e => {
+        const idx = e.target.dataset.mIdx;
+        const field = e.target.dataset.mField;
+        if (idx !== undefined && field) modalFeedItems[Number(idx)][field] = e.target.value;
+      });
+      bodyEl.addEventListener('change', e => {
+        const idx = e.target.dataset.mIdx;
+        const field = e.target.dataset.mField;
+        if (idx !== undefined && field) modalFeedItems[Number(idx)][field] = e.target.value;
+      });
+      const addBtn = document.getElementById('modal-add-food');
+      if (addBtn) addBtn.onclick = () => { modalFeedItems.push({ food: '', count: '', supp: '' }); mountModal(); };
+      bodyEl.querySelectorAll('[data-m-rem]').forEach(b => {
+        b.onclick = () => { modalFeedItems.splice(Number(b.dataset.mRem), 1); mountModal(); };
+      });
+    }
+
+    const delBtn = document.getElementById('del-rec-btn');
+    if (delBtn) {
+      delBtn.onclick = () => {
+        showConfirm('記録の削除', 'この記録を削除してもよろしいですか？', () => {
+          const next = { ...state.data, records: state.data.records.filter(r => r.id !== record.id) };
+          persistData(next, '記録を削除しました');
+          closeModal();
+          render();
+        });
+      };
+    }
+
+    document.getElementById('save-rec-btn').onclick = () => {
+      const form = document.getElementById('rec-form');
+      const fd = new FormData(form);
+      const date = String(fd.get('date') || '').trim();
+      const pet = String(fd.get('pet') || '');
+      const note = String(fd.get('note') || '').trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { showStatus('日付を正しく入力してください。', 'danger'); return; }
+
+      const updated = { ...record, id: record.id || uid(), kind: k, date, pet, note };
+      if (k === 'feed') {
+        const cleaned = modalFeedItems.map(it => ({
+          food: String(it.food ?? '').trim(),
+          count: String(it.count ?? '').trim(),
+          supp: String(it.supp ?? '').trim()
+        }));
+        for (const it of cleaned) {
+          if (it.count !== '' && !/^\d+$/.test(it.count)) {
+            showStatus('給餌数は0以上の整数か空欄にしてください。', 'danger');
+            return;
+          }
+        }
+        updated.food = cleaned[0]?.food || '';
+        updated.count = cleaned[0]?.count || '';
+        updated.supp = cleaned[0]?.supp || '';
+        if (cleaned.length > 1) updated.items = cleaned;
+        else delete updated.items;
+        updated.result = String(fd.get('result') || '');
+      } else if (k === 'weight') {
+        const val = String(fd.get('value') || '').trim();
+        if (!val || Number(val) <= 0) { showStatus('体重は0より大きい数値で入力してください。', 'danger'); return; }
+        updated.value = val;
+        const unc = form.querySelector('[name="unconfirmed"]')?.checked;
+        updated.unconfirmed = !!unc;
+        if (!unc) updated.confirmedByUser = true;
+      } else if (k === 'health') {
+        updated.category = String(fd.get('category') || 'その他');
+      } else if (k === 'breed') {
+        updated.partner = String(fd.get('partner') || '');
+        updated.child = String(fd.get('child') || '');
+        const ids = [updated.pet, updated.partner, updated.child].filter(Boolean);
+        if (new Set(ids).size !== ids.length) {
+          showStatus('母・父・子には別々の個体を指定してください。', 'danger');
+          return;
+        }
+        const unc = form.querySelector('[name="unconfirmed"]')?.checked;
+        updated.unconfirmed = !!unc;
+        if (!unc) updated.confirmedByUser = true;
+      }
+
+      const nextRecords = isNew
+        ? [...state.data.records, updated]
+        : state.data.records.map(r => r.id === updated.id ? updated : r);
+      persistData({ ...state.data, records: nextRecords }, isNew ? '記録を追加しました' : '記録を更新しました');
+      closeModal();
+      render();
+    };
+  }
+  mountModal();
+}
+
+// ============================================================================
+// 9. グローバルイベント委譲
+// ============================================================================
+document.addEventListener('click', (e) => {
+  const navBtn = e.target.closest('[data-nav]');
+  if (navBtn) {
+    state.tab = navBtn.dataset.nav;
+    state.selectedPetId = '';
+    render();
+    window.scrollTo(0, 0);
+    return;
+  }
+  const openPet = e.target.closest('[data-open-pet]');
+  if (openPet) {
+    state.tab = '個体';
+    state.selectedPetId = openPet.dataset.openPet;
+    render();
+    window.scrollTo(0, 0);
+    return;
+  }
+  if (e.target.closest('[data-back-pets]')) {
+    state.selectedPetId = '';
+    render();
+    return;
+  }
+  const editProf = e.target.closest('[data-edit-profile]');
+  if (editProf) {
+    openProfileModal(editProf.dataset.editProfile);
+    return;
+  }
+  const newRec = e.target.closest('[data-new-rec]');
+  if (newRec) {
+    const kind = newRec.dataset.newRec;
+    const pet = newRec.dataset.petId || state.recPetFilter || (kind === 'breed' ? '1' : '0');
+    openRecordModal({ kind, date: state.recDateFilter || todayJST(), pet }, true);
+    return;
+  }
+  const editRec = e.target.closest('[data-edit-rec]');
+  if (editRec) {
+    const rec = state.data.records.find(r => r.id === editRec.dataset.editRec);
+    if (rec) openRecordModal(rec, false);
+    return;
+  }
+  const confRec = e.target.closest('[data-confirm-record]');
+  if (confRec) {
+    const rec = state.data.records.find(r => r.id === confRec.dataset.confirmRecord);
+    if (rec) {
+      showConfirm('要確認データの確定', `${rec.date} の体重 ${rec.value} g を確定データとして体重グラフに反映しますか？`, () => {
+        const next = {
+          ...state.data,
+          records: state.data.records.map(r => r.id === rec.id ? { ...r, unconfirmed: false, confirmedByUser: true } : r)
+        };
+        persistData(next, '体重データを確定しました');
+        render();
+      });
+    }
+    return;
+  }
+  const jumpDate = e.target.closest('[data-jump-date]');
+  if (jumpDate) {
+    state.tab = '日付別記録';
+    state.recDateFilter = jumpDate.dataset.jumpDate;
+    state.recKindFilter = 'feed';
+    state.recPetFilter = '';
+    render();
+    window.scrollTo(0, 0);
+    return;
+  }
+  const addFood = e.target.closest('[data-add-food-item]');
+  if (addFood) {
+    const d = ensureDraftForPet(addFood.dataset.addFoodItem);
+    d.items.push({ food: '', count: '', supp: '' });
+    saveDraft();
+    render();
+    return;
+  }
+  const remFood = e.target.closest('[data-remove-food-item]');
+  if (remFood) {
+    const [pid, idx] = remFood.dataset.removeFoodItem.split(':');
+    const d = ensureDraftForPet(pid);
+    if (d.items.length > 1) {
+      d.items.splice(Number(idx), 1);
+      saveDraft();
+      render();
+    }
+    return;
+  }
+});
+
+// 給餌入力フォームのリアルタイムドラフト保存
+document.addEventListener('input', (e) => {
+  const field = e.target.dataset?.draftField;
+  if (!field) return;
+  const pid = e.target.dataset.pet;
+  const d = ensureDraftForPet(pid);
+  if (field === 'result' || field === 'note') {
+    d[field] = e.target.value;
+  } else {
+    const idx = Number(e.target.dataset.idx || 0);
+    if (!d.items[idx]) d.items[idx] = { food: '', count: '', supp: '' };
+    d.items[idx][field] = e.target.value;
+  }
+  saveDraft();
+});
+document.addEventListener('change', (e) => {
+  const field = e.target.dataset?.draftField;
+  if (!field) return;
+  const pid = e.target.dataset.pet;
+  const d = ensureDraftForPet(pid);
+  if (field === 'result' || field === 'note') {
+    d[field] = e.target.value;
+  } else {
+    const idx = Number(e.target.dataset.idx || 0);
+    if (!d.items[idx]) d.items[idx] = { food: '', count: '', supp: '' };
+    d.items[idx][field] = e.target.value;
+  }
+  saveDraft();
+});
+
+// ============================================================================
+// 10. 起動シーケンス
+// ============================================================================
+loadSavedFbConfig();
+loadDraft();
+loadFromLocalStorage();
+render();
+initFirebaseIfConfigured(true);
+
+})();
+</script>
+</body>
+</html>
